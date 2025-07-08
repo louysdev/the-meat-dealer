@@ -178,9 +178,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                 <div>
                   <h1 className="text-3xl font-bold text-white mb-2">
                     {profile.firstName} {profile.lastName}
-                    <span className="ml-3 text-2xl">
-                      {profile.isAvailable !== false ? '😏' : '😔'}
-                    </span>
                   </h1>
                   <div className="flex items-center space-x-4 text-gray-300">
                     <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
@@ -188,6 +185,9 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                         ? 'bg-green-600/20 text-green-300 border border-green-600/30'
                         : 'bg-red-600/20 text-red-300 border border-red-600/30'
                     }`}>
+                      <span className="text-lg">
+                        {profile.isAvailable !== false ? '😏' : '😔'}
+                      </span>
                       <span>
                         {profile.isAvailable !== false ? 'Disponible' : 'No disponible'}
                       </span>
@@ -210,9 +210,17 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
               {/* Media count and creation date */}
               <div className="flex items-center justify-between mb-4 text-gray-400 text-sm">
                 <span>{profile.photos.length} fotos • {profile.videos.length} videos</span>
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
-                  <span>Creado {timeAgo}</span>
+                <div className="flex items-center space-x-4">
+                  {profile.createdByUser && (
+                    <div className="flex items-center space-x-1">
+                      <User className="w-4 h-4" />
+                      <span>Por @{profile.createdByUser.username}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-1">
+                    <Clock className="w-4 h-4" />
+                    <span>Creado {timeAgo}</span>
+                  </div>
                 </div>
               </div>
 

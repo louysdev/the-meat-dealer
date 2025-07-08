@@ -43,3 +43,15 @@ export interface DatabaseProfilePhoto {
   photo_order: number;
   created_at: string;
 }
+
+export interface DatabaseUser {
+  id: string;
+  full_name: string;
+  username: string;
+  password_hash: string;
+  role: 'admin' | 'user';
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+}

@@ -156,10 +156,67 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           </div>
         )}
 
-        {/* Instagram */}
-        <div className="flex items-center justify-between">
+        {/* Instagram y información del creador */}
+        <div className="space-y-2">
           {profile.instagram && (
-            <div className="flex items-center space-x-2 text-pink-400 text-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 text-pink-400 text-sm">
+                <Instagram className="w-4 h-4" />
+                <span>{profile.instagram}</span>
+              </div>
+              
+              {/* Badge de Disponibilidad */}
+              <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+                profile.isAvailable !== false
+                  ? 'bg-green-600/20 text-green-300 border border-green-600/30'
+                  : 'bg-red-600/20 text-red-300 border border-red-600/30'
+              }`}>
+                <span className="text-sm">
+                  {profile.isAvailable !== false ? '😏' : '😔'}
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {/* Creado por usuario */}
+          {profile.createdByUser && (
+            <div className="flex items-center justify-between text-xs">
+              <div className="text-gray-400">
+                Creado por: <span className="text-blue-300">@{profile.createdByUser.username}</span>
+              </div>
+              {!profile.instagram && (
+                <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+                  profile.isAvailable !== false
+                    ? 'bg-green-600/20 text-green-300 border border-green-600/30'
+                    : 'bg-red-600/20 text-red-300 border border-red-600/30'
+                }`}>
+                  <span className="text-sm">
+                    {profile.isAvailable !== false ? '😏' : '😔'}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Si no hay Instagram ni usuario creador, mostrar solo disponibilidad */}
+          {!profile.instagram && !profile.createdByUser && (
+            <div className="flex justify-end">
+              <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+                profile.isAvailable !== false
+                  ? 'bg-green-600/20 text-green-300 border border-green-600/30'
+                  : 'bg-red-600/20 text-red-300 border border-red-600/30'
+              }`}>
+                <span className="text-sm">
+                  {profile.isAvailable !== false ? '😏' : '😔'}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
               <Instagram className="w-4 h-4" />
               <span>{profile.instagram}</span>
             </div>

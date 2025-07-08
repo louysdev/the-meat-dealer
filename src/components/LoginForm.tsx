@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Heart, Lock, User, Eye, EyeOff } from 'lucide-react';
 
 interface LoginFormProps {
-  onLogin: (username: string, password: string) => boolean;
+  onLogin: (username: string, password: string) => Promise<boolean>;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
@@ -20,7 +20,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
     // Simular un pequeño delay para mejor UX
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const success = onLogin(username, password);
+    const success = await onLogin(username, password);
     
     if (!success) {
       setError('Usuario o contraseña incorrectos');

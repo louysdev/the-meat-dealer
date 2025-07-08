@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
-
-// Credenciales maestras (en producción deberían estar en variables de entorno)
-const MASTER_CREDENTIALS = {
-  username: 'admin',
-  password: 'meatdealer2025'
-};
+import { User } from '../types';
+import { authenticateUser } from '../services/userService';
 
 export const useAuth = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const isAuthenticated = currentUser !== null;
 
   // Verificar si ya está autenticado al cargar
   useEffect(() => {
@@ -16,22 +14,26 @@ export const useAuth = () => {
       const authData = localStorage.getItem('meatdealer_auth');
       if (authData) {
         try {
-          const { timestamp, authenticated } = JSON.parse(authData);
+          const { timestamp, user } = JSON.parse(authData);
           const now = Date.now();
           const sessionDuration = 24 * 60 * 60 * 1000; // 24 horas
           
           // Verificar si la sesión no ha expirado
-          if (authenticated && (now - timestamp) < sessionDuration) {
-            setIsAuthenticated(true);
+          if (user && (now - timestamp) < sessionDuration) {
+            setCurrentUser({
+              ...user,
+              createdAt: new Date(user.createdAt),
+              updatedAt: new Date(user.updatedAt)
+            });
           } else {
             // Sesión expirada, limpiar
             localStorage.removeItem('meatdealer_auth');
-            setIsAuthenticated(false);
+            setCurrentUser(null);
           }
         } catch (error) {
           console.error('Error parsing auth data:', error);
           localStorage.removeItem('meatdealer_auth');
-          setIsAuthenticated(false);
+          setCurrentUser(null);
         }
       }
       setIsLoading(false);
@@ -40,15 +42,45 @@ export const useAuth = () => {
     checkAuth();
   }, []);
 
-  const login = (username: string, password: string): boolean => {
-    if (username === MASTER_CREDENTIALS.username && password === MASTER_CREDENTIALS.password) {
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const user = await authenticateUser(username, password);
+      
+      if (user) {
+        const authData = {
+          user: user,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('meatdealer_auth', JSON.stringify(authData));
+        setCurrentUser(user);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error en login:', error);
+      return false;
+    }
+  };
+
+  // Método de login legacy para compatibilidad
+  const loginLegacy = (username: string, password: string): boolean => {
+    // Credenciales maestras para compatibilidad
+    if (username === 'admin' && password === 'meatdealer2025') {
       const authData = {
-        authenticated: true,
-        timestamp: Date.now(),
-        username: username
+        user: {
+          id: 'legacy-admin',
+          fullName: 'Administrador Legacy',
+          username: 'admin',
+          role: 'admin' as const,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        timestamp: Date.now()
       };
       localStorage.setItem('meatdealer_auth', JSON.stringify(authData));
-      setIsAuthenticated(true);
+      setCurrentUser(authData.user);
       return true;
     }
     return false;
@@ -56,13 +88,15 @@ export const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem('meatdealer_auth');
-    setIsAuthenticated(false);
+    setCurrentUser(null);
   };
 
   return {
+    currentUser,
     isAuthenticated,
     isLoading,
     login,
+    loginLegacy,
     logout
   };
 };

@@ -5,6 +5,7 @@ import { Catalog } from './components/Catalog';
 import { AddProfileForm } from './components/AddProfileForm';
 import { EditProfileForm } from './components/EditProfileForm';
 import { ProfileDetail } from './components/ProfileDetail';
+import { UserManagement } from './components/UserManagement';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorMessage } from './components/ErrorMessage';
 import { Modal } from './components/Modal';
@@ -14,10 +15,10 @@ import { useProfiles } from './hooks/useProfiles';
 import { useModal } from './hooks/useModal';
 import { useAuth } from './hooks/useAuth';
 
-type View = 'catalog' | 'add' | 'detail' | 'edit' | 'shared-profile';
+type View = 'catalog' | 'add' | 'detail' | 'edit' | 'shared-profile' | 'user-management';
 
 function App() {
-  const { isAuthenticated, isLoading: authLoading, login, logout } = useAuth();
+  const { currentUser, isAuthenticated, isLoading: authLoading, login, logout } = useAuth();
   
   const {
     profiles,
@@ -74,7 +75,7 @@ function App() {
 
   const handleAddProfile = async (profileData: Omit<Profile, 'id' | 'createdAt'>) => {
     try {
-      await addProfile(profileData);
+      await addProfile(profileData, currentUser?.id);
       setCurrentView('catalog');
       showSuccess(
         '¡Perfil Agregado!',
@@ -163,6 +164,10 @@ function App() {
     setSelectedProfile(null);
   };
 
+  const handleUserManagement = () => {
+    setCurrentView('user-management');
+    setSelectedProfile(null);
+  };
   const handleLogout = () => {
     showConfirm(
       'Cerrar Sesión',
@@ -183,6 +188,8 @@ function App() {
           <Header 
             currentView={currentView} 
             onViewChange={handleViewChange}
+            currentUser={currentUser}
+            onUserManagement={handleUserManagement}
             onLogout={handleLogout}
           />
           <LoadingSpinner />
@@ -199,6 +206,8 @@ function App() {
         <Header 
           currentView={currentView}
           onViewChange={handleViewChange}
+          currentUser={currentUser}
+          onUserManagement={handleUserManagement}
           onLogout={handleLogout}
         />
 
@@ -245,6 +254,12 @@ function App() {
             />
           )}
         </main>
+          {currentView === 'user-management' && currentUser && (
+            <UserManagement 
+              currentUser={currentUser}
+              onClose={handleBackToCatalog}
+            />
+          )}
       </div>
 
       {/* Modal Global */}

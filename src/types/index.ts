@@ -34,6 +34,7 @@ export interface Profile {
   isFavorite?: boolean;
   isAvailable?: boolean;
   createdAt: Date;
+  createdByUser?: User; // Usuario que creó el perfil
 }
 
 export interface MediaItem {
@@ -41,4 +42,22 @@ export interface MediaItem {
   url: string;
   type: 'photo' | 'video';
   order: number;
+}
+
+export interface User {
+  id: string;
+  fullName: string;
+  username: string;
+  role: 'admin' | 'user';
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy?: string; // ID del admin que creó el usuario
+}
+
+export interface CreateUserData {
+  fullName: string;
+  username: string;
+  password: string;
+  role: 'admin' | 'user';
 }

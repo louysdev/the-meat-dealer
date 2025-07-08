@@ -5,7 +5,8 @@ import { DatabaseProfile, DatabaseProfilePhoto } from '../lib/supabase';
 // Convertir perfil de la base de datos al tipo de la aplicación
 const convertDatabaseProfileToProfile = (
   dbProfile: DatabaseProfile,
-  media: MediaItem[]
+  media: MediaItem[],
+  createdByUser?: any
 ): Profile => {
   const photos = media.filter(m => m.type === 'photo').map(m => m.url);
   const videos = media.filter(m => m.type === 'video').map(m => m.url);
@@ -33,6 +34,15 @@ const convertDatabaseProfileToProfile = (
     photos,
     videos,
     createdAt: new Date(dbProfile.created_at),
+    createdByUser: createdByUser ? {
+      id: createdByUser.id,
+      fullName: createdByUser.full_name,
+      username: createdByUser.username,
+      role: createdByUser.role,
+      isActive: createdByUser.is_active,
+      createdAt: new Date(createdByUser.created_at),
+      updatedAt: new Date(createdByUser.updated_at)
+    } : undefined
   };
 };
 
@@ -118,7 +128,18 @@ export const getProfiles = async (): Promise<Profile[]> => {
     // Obtener perfiles
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('*')
+      .select(`
+        *,
+        created_by_user:created_by_user(
+          id,
+          full_name,
+          username,
+          role,
+          is_active,
+          created_at,
+          updated_at
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (profilesError) {
@@ -158,7 +179,8 @@ export const getProfiles = async (): Promise<Profile[]> => {
     return profiles.map(profile => 
       convertDatabaseProfileToProfile(
         profile as DatabaseProfile,
-        mediaByProfile[profile.id] || []
+        mediaByProfile[profile.id] || [],
+        profile.created_by_user
       )
     );
   } catch (error) {
@@ -168,12 +190,20 @@ export const getProfiles = async (): Promise<Profile[]> => {
 };
 
 // Crear nuevo perfil
-export const createProfile = async (profileData: Omit<Profile, 'id' | 'createdAt'>): Promise<Profile> => {
+export const createProfile = async (
+  profileData: Omit<Profile, 'id' | 'createdAt'>, 
+  createdByUserId?: string
+): Promise<Profile> => {
   try {
     // Crear perfil en la base de datos
+    const profileToInsert = {
+      ...convertProfileToDatabaseProfile(profileData),
+      created_by_user: createdByUserId
+    };
+
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .insert([convertProfileToDatabaseProfile(profileData)])
+      .insert([profileToInsert])
       .select()
       .single();
 

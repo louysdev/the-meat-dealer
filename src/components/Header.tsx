@@ -1,13 +1,22 @@
 import React from 'react';
-import { Heart, Plus, Grid3X3, LogOut } from 'lucide-react';
+import { Heart, Plus, Grid3X3, LogOut, Users } from 'lucide-react';
+import { User } from '../types';
 
 interface HeaderProps {
   currentView: 'catalog' | 'add' | 'detail' | 'edit';
   onViewChange: (view: 'catalog' | 'add') => void;
   onLogout?: () => void;
+  currentUser?: User;
+  onUserManagement?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange, onLogout }) => {
+export const Header: React.FC<HeaderProps> = ({ 
+  currentView, 
+  onViewChange, 
+  onLogout, 
+  currentUser,
+  onUserManagement 
+}) => {
   return (
     <header className="bg-gradient-to-r from-red-900 to-red-800 shadow-2xl relative overflow-hidden">
       <div className="absolute inset-0 bg-black/20"></div>
@@ -15,9 +24,16 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange, onLog
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-3">
             <Heart className="w-8 h-8 text-red-400 animate-pulse fill-current" />
-            <h1 className="text-2xl font-bold text-white">
-              The Meat Dealer
-            </h1>
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                The Meat Dealer
+              </h1>
+              {currentUser && (
+                <p className="text-red-200 text-sm">
+                  Bienvenido, {currentUser.fullName}
+                </p>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -44,6 +60,15 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange, onLog
                 <Plus className="w-4 h-4" />
                 <span>Agregar</span>
               </button>
+              {currentUser?.role === 'admin' && onUserManagement && (
+                <button
+                  onClick={onUserManagement}
+                  className="px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 text-white hover:bg-white/10"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Usuarios</span>
+                </button>
+              )}
             </nav>
 
             {onLogout && (

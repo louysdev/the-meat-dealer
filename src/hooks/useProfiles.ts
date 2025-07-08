@@ -23,10 +23,10 @@ export const useProfiles = () => {
   };
 
   // Agregar perfil
-  const addProfile = async (profileData: Omit<Profile, 'id' | 'createdAt'>) => {
+  const addProfile = async (profileData: Omit<Profile, 'id' | 'createdAt'>, createdByUserId?: string) => {
     try {
       setError(null);
-      const newProfile = await profileService.createProfile(profileData);
+      const newProfile = await profileService.createProfile(profileData, createdByUserId);
       setProfiles(prev => [newProfile, ...prev]);
       return newProfile;
     } catch (err) {
