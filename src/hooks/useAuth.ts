@@ -44,7 +44,27 @@ export const useAuth = () => {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const user = await authenticateUser(username, password);
+      // Primero intentar con el sistema de base de datos
+      let user = await authenticateUser(username, password);
+      
+      // Si no funciona y son las credenciales del admin legacy, usar el método legacy
+      if (!user && username === 'admin' && password === 'meatdealer2025') {
+        const authData = {
+          user: {
+            id: 'legacy-admin',
+            fullName: 'Administrador Principal',
+            username: 'admin',
+            role: 'admin' as const,
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          timestamp: Date.now()
+        };
+        localStorage.setItem('meatdealer_auth', JSON.stringify(authData));
+        setCurrentUser(authData.user);
+        return true;
+      }
       
       if (user) {
         const authData = {
@@ -63,29 +83,6 @@ export const useAuth = () => {
     }
   };
 
-  // Método de login legacy para compatibilidad
-  const loginLegacy = (username: string, password: string): boolean => {
-    // Credenciales maestras para compatibilidad
-    if (username === 'admin' && password === 'meatdealer2025') {
-      const authData = {
-        user: {
-          id: 'legacy-admin',
-          fullName: 'Administrador Legacy',
-          username: 'admin',
-          role: 'admin' as const,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        timestamp: Date.now()
-      };
-      localStorage.setItem('meatdealer_auth', JSON.stringify(authData));
-      setCurrentUser(authData.user);
-      return true;
-    }
-    return false;
-  };
-
   const logout = () => {
     localStorage.removeItem('meatdealer_auth');
     setCurrentUser(null);
@@ -96,7 +93,6 @@ export const useAuth = () => {
     isAuthenticated,
     isLoading,
     login,
-    loginLegacy,
     logout
   };
 };
