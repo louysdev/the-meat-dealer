@@ -217,38 +217,3 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     </div>
   );
 };
-              <Instagram className="w-4 h-4" />
-              <span>{profile.instagram}</span>
-            </div>
-          )}
-          
-          {/* Badge de Disponibilidad - Compacto */}
-          <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
-            profile.isAvailable !== false
-              ? 'bg-green-600/20 text-green-300 border border-green-600/30'
-              : 'bg-red-600/20 text-red-300 border border-red-600/30'
-          }`}>
-            <span className="text-sm">
-              {profile.isAvailable !== false ? '😏' : '😔'}
-            </span>
-          </div>
-        </div>
-        
-        {/* Si no hay Instagram, mostrar solo el estado */}
-        {!profile.instagram && (
-          <div className="flex justify-end">
-            <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
-              profile.isAvailable !== false
-                ? 'bg-green-600/20 text-green-300 border border-green-600/30'
-                : 'bg-red-600/20 text-red-300 border border-red-600/30'
-            }`}>
-              <span className="text-sm">
-                {profile.isAvailable !== false ? '😏' : '😔'}
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
