@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Profile } from '../types';
 import * as profileService from '../services/profileService';
-import { User } from '../types';
 
-export const useProfiles = (currentUser?: User) => {
+export const useProfiles = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +12,7 @@ export const useProfiles = (currentUser?: User) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await profileService.getProfiles(currentUser?.id);
+      const data = await profileService.getProfiles();
       setProfiles(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -61,29 +60,21 @@ export const useProfiles = (currentUser?: User) => {
     }
   };
 
-  // Alternar like
-  const toggleLike = async (profileId: string) => {
+  // Alternar favorito
+  const toggleFavorite = async (profileId: string) => {
     try {
       setError(null);
-      if (!currentUser) {
-        throw new Error('Debes estar autenticado para dar like');
-      }
-      
       const profile = profiles.find(p => p.id === profileId);
       if (!profile) return;
 
-      const newLikeStatus = !profile.isLikedByCurrentUser;
-      await profileService.toggleLike(profileId, currentUser.id, newLikeStatus);
+      const newFavoriteStatus = !profile.isFavorite;
+      await profileService.toggleFavorite(profileId, newFavoriteStatus);
       
       setProfiles(prev => prev.map(p => 
-        p.id === profileId ? { 
-          ...p, 
-          isLikedByCurrentUser: newLikeStatus,
-          likesCount: newLikeStatus ? (p.likesCount || 0) + 1 : Math.max(0, (p.likesCount || 0) - 1)
-        } : p
+        p.id === profileId ? { ...p, isFavorite: newFavoriteStatus } : p
       ));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error actualizando like');
+      setError(err instanceof Error ? err.message : 'Error actualizando favorito');
       throw err;
     }
   };
@@ -99,7 +90,7 @@ export const useProfiles = (currentUser?: User) => {
     addProfile,
     updateProfile,
     deleteProfile,
-    toggleLike,
+    toggleFavorite,
     refreshProfiles: loadProfiles
   };
 };

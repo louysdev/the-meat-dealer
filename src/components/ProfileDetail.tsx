@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Heart, 
@@ -18,10 +17,8 @@ import {
   Clock
 } from 'lucide-react';
 import { Profile } from '../types';
-import { Profile, ProfileLike } from '../types';
 import { MediaSlider } from './MediaSlider';
 import { ShareButton } from './ShareButton';
-import { getProfileLikes } from '../services/profileService';
 import { getTimeAgo } from '../utils/dateUtils';
 
 interface ProfileDetailProps {
@@ -39,25 +36,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
 }) => {
   const [showFullscreenSlider, setShowFullscreenSlider] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
-  const [profileLikes, setProfileLikes] = useState<ProfileLike[]>([]);
-  const [showLikesModal, setShowLikesModal] = useState(false);
-  const [loadingLikes, setLoadingLikes] = useState(false);
-
-  useEffect(() => {
-    loadProfileLikes();
-  }, [profile.id]);
-
-  const loadProfileLikes = async () => {
-    try {
-      setLoadingLikes(true);
-      const likes = await getProfileLikes(profile.id);
-      setProfileLikes(likes);
-    } catch (error) {
-      console.error('Error cargando likes:', error);
-    } finally {
-      setLoadingLikes(false);
-    }
-  };
 
   // Combinar fotos y videos en un solo array de media
   const allMedia = [
@@ -230,18 +208,8 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
               </div>
 
               {/* Media count and creation date */}
-              <div className="flex items-center justify-between mb-6 text-gray-400 text-sm">
-                <div className="flex items-center space-x-4">
-                  <span>{profile.photos.length} fotos • {profile.videos.length} videos</span>
-                  {/* Contador de likes clickeable */}
-                  <button
-                    onClick={() => setShowLikesModal(true)}
-                    className="flex items-center space-x-1 hover:text-red-400 transition-colors"
-                  >
-                    <Heart className={`w-4 h-4 ${profile.isLikedByCurrentUser ? 'fill-current text-red-400' : ''}`} />
-                    <span>{profile.likesCount || 0} likes</span>
-                  </button>
-                </div>
+              <div className="flex items-center justify-between mb-4 text-gray-400 text-sm">
+                <span>{profile.photos.length} fotos • {profile.videos.length} videos</span>
                 <div className="flex items-center space-x-4">
                   {profile.createdByUser && (
                     <div className="flex items-center space-x-1">
@@ -408,66 +376,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Modal de Likes */}
-      {showLikesModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-gray-700 max-w-md w-full max-h-[80vh] overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h3 className="text-xl font-bold text-white flex items-center space-x-2">
-                <Heart className="w-5 h-5 text-red-400 fill-current" />
-                <span>Likes ({profile.likesCount || 0})</span>
-              </h3>
-              <button
-                onClick={() => setShowLikesModal(false)}
-                className="text-gray-400 hover:text-white transition-colors rounded-full p-1 hover:bg-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 max-h-96 overflow-y-auto">
-              {loadingLikes ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              ) : profileLikes.length > 0 ? (
-                <div className="space-y-3">
-                  {profileLikes.map((like) => (
-                    <div key={like.id} className="flex items-center space-x-3 p-3 bg-gray-800/50 rounded-lg">
-                      <div className="w-10 h-10 bg-red-600/20 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-red-400" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-white font-medium">
-                          {like.user?.fullName || 'Usuario desconocido'}
-                        </div>
-                        <div className="text-gray-400 text-sm">
-                          @{like.user?.username || 'unknown'} • {getTimeAgo(like.createdAt)}
-                        </div>
-                      </div>
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        like.user?.role === 'admin' 
-                          ? 'bg-purple-600/20 text-purple-300 border border-purple-600/30'
-                          : 'bg-blue-600/20 text-blue-300 border border-blue-600/30'
-                      }`}>
-                        {like.user?.role === 'admin' ? 'Admin' : 'Usuario'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Heart className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400">Aún no hay likes en este perfil</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Fullscreen Media Slider */}
       {showFullscreenSlider && (

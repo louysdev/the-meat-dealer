@@ -6,17 +6,17 @@ import { getTimeAgo, isNewProfile } from '../utils/dateUtils';
 interface ProfileCardProps {
   profile: Profile;
   onClick: () => void;
-  onToggleLike: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({ 
   profile, 
   onClick, 
-  onToggleLike
+  onToggleFavorite
 }) => {
-  const handleLikeClick = (e: React.MouseEvent) => {
+  const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onToggleLike(profile.id);
+    onToggleFavorite(profile.id);
   };
 
   // Obtener el primer archivo de media (foto o video)
@@ -91,24 +91,17 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         )}
         
         {/* Favorite button */}
-        {/* Like button */}
         <div className="absolute top-4 left-4" style={{ marginTop: totalMedia > 1 ? '2.5rem' : '0' }}>
           <button
-            onClick={handleLikeClick}
+            onClick={handleFavoriteClick}
             className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
-              profile.isLikedByCurrentUser 
+              profile.isFavorite 
                 ? 'bg-red-600/90 text-white' 
                 : 'bg-black/50 text-gray-300 hover:bg-red-600/70 hover:text-white'
             }`}
           >
-            <Heart className={`w-5 h-5 ${profile.isLikedByCurrentUser ? 'fill-current' : ''}`} />
+            <Heart className={`w-5 h-5 ${profile.isFavorite ? 'fill-current' : ''}`} />
           </button>
-          {/* Contador de likes */}
-          {(profile.likesCount || 0) > 0 && (
-            <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold">
-              {profile.likesCount}
-            </div>
-          )}
         </div>
 
         {/* Name overlay at bottom */}

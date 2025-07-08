@@ -6,9 +6,7 @@ import { DatabaseProfile, DatabaseProfilePhoto } from '../lib/supabase';
 const convertDatabaseProfileToProfile = (
   dbProfile: DatabaseProfile,
   media: MediaItem[],
-  createdByUser?: any,
-  likesCount: number = 0,
-  isLikedByCurrentUser: boolean = false
+  createdByUser?: any
 ): Profile => {
   const photos = media.filter(m => m.type === 'photo').map(m => m.url);
   const videos = media.filter(m => m.type === 'video').map(m => m.url);
@@ -31,6 +29,7 @@ const convertDatabaseProfileToProfile = (
     instagram: dbProfile.instagram,
     musicTags: dbProfile.music_tags,
     placeTags: dbProfile.place_tags,
+    isFavorite: dbProfile.is_favorite,
     isAvailable: dbProfile.is_available,
     photos,
     videos,
@@ -43,9 +42,7 @@ const convertDatabaseProfileToProfile = (
       isActive: createdByUser.is_active,
       createdAt: new Date(createdByUser.created_at),
       updatedAt: new Date(createdByUser.updated_at)
-    } : undefined,
-    likesCount,
-    isLikedByCurrentUser
+    } : undefined
   };
 };
 
@@ -126,7 +123,7 @@ const base64ToFile = (base64: string, fileName: string): File => {
 };
 
 // Obtener todos los perfiles
-export const getProfiles = async (currentUserId?: string): Promise<Profile[]> => {
+export const getProfiles = async (): Promise<Profile[]> => {
   try {
     // Obtener perfiles
     const { data: profiles, error: profilesError } = await supabase
@@ -152,30 +149,6 @@ export const getProfiles = async (currentUserId?: string): Promise<Profile[]> =>
     if (!profiles || profiles.length === 0) {
       return [];
     }
-
-    // Obtener conteo de likes para todos los perfiles
-    const { data: likesData, error: likesError } = await supabase
-      .from('profile_likes')
-      .select('profile_id, user_id');
-
-    if (likesError) {
-      console.error('Error obteniendo likes:', likesError);
-    }
-
-    // Procesar likes por perfil
-    const likesByProfile = (likesData || []).reduce((acc, like) => {
-      if (!acc[like.profile_id]) {
-        acc[like.profile_id] = {
-          count: 0,
-          isLikedByCurrentUser: false
-        };
-      }
-      acc[like.profile_id].count++;
-      if (currentUserId && like.user_id === currentUserId) {
-        acc[like.profile_id].isLikedByCurrentUser = true;
-      }
-      return acc;
-    }, {} as Record<string, { count: number; isLikedByCurrentUser: boolean }>);
 
     // Obtener media para todos los perfiles
     const { data: media, error: mediaError } = await supabase
@@ -203,16 +176,13 @@ export const getProfiles = async (currentUserId?: string): Promise<Profile[]> =>
     }, {} as Record<string, MediaItem[]>);
 
     // Convertir y combinar datos
-    return profiles.map(profile => {
-      const profileLikes = likesByProfile[profile.id] || { count: 0, isLikedByCurrentUser: false };
-      return convertDatabaseProfileToProfile(
+    return profiles.map(profile => 
+      convertDatabaseProfileToProfile(
         profile as DatabaseProfile,
         mediaByProfile[profile.id] || [],
-        profile.created_by_user,
-        profileLikes.count,
-        profileLikes.isLikedByCurrentUser
-      );
-    });
+        profile.created_by_user
+      )
+    );
   } catch (error) {
     console.error('Error en getProfiles:', error);
     throw error;
@@ -281,7 +251,7 @@ export const createProfile = async (
       }
     }
 
-    return convertDatabaseProfileToProfile(profile as DatabaseProfile, mediaItems, null, 0, false);
+    return convertDatabaseProfileToProfile(profile as DatabaseProfile, mediaItems);
   } catch (error) {
     console.error('Error en createProfile:', error);
     throw error;
@@ -370,7 +340,7 @@ export const updateProfile = async (updatedProfile: Profile): Promise<Profile> =
       }
     }
 
-    return convertDatabaseProfileToProfile(profile as DatabaseProfile, newMediaItems, null, 0, false);
+    return convertDatabaseProfileToProfile(profile as DatabaseProfile, newMediaItems);
   } catch (error) {
     console.error('Error en updateProfile:', error);
     throw error;
@@ -409,83 +379,19 @@ export const deleteProfile = async (profileId: string): Promise<void> => {
   }
 };
 
-// Alternar like
-export const toggleLike = async (profileId: string, userId: string, isLiked: boolean): Promise<void> => {
+// Alternar favorito
+export const toggleFavorite = async (profileId: string, isFavorite: boolean): Promise<void> => {
   try {
-    if (isLiked) {
-      // Agregar like
-      const { error } = await supabase
-        .from('profile_likes')
-        .insert([{
-          profile_id: profileId,
-          user_id: userId
-        }]);
-
-      if (error) {
-        throw new Error(`Error agregando like: ${error.message}`);
-      }
-    } else {
-      // Quitar like
-      const { error } = await supabase
-        .from('profile_likes')
-        .delete()
-        .eq('profile_id', profileId)
-        .eq('user_id', userId);
-
-      if (error) {
-        throw new Error(`Error quitando like: ${error.message}`);
-      }
-    }
-  } catch (error) {
-    console.error('Error en toggleLike:', error);
-    throw error;
-  }
-};
-
-// Obtener usuarios que dieron like a un perfil
-export const getProfileLikes = async (profileId: string): Promise<ProfileLike[]> => {
-  try {
-    const { data: likes, error } = await supabase
-      .from('profile_likes')
-      .select(`
-        id,
-        profile_id,
-        user_id,
-        created_at,
-        user:user_id(
-          id,
-          full_name,
-          username,
-          role,
-          is_active,
-          created_at,
-          updated_at
-        )
-      `)
-      .eq('profile_id', profileId)
-      .order('created_at', { ascending: false });
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_favorite: isFavorite })
+      .eq('id', profileId);
 
     if (error) {
-      throw new Error(`Error obteniendo likes: ${error.message}`);
+      throw new Error(`Error actualizando favorito: ${error.message}`);
     }
-
-    return (likes || []).map(like => ({
-      id: like.id,
-      profileId: like.profile_id,
-      userId: like.user_id,
-      createdAt: new Date(like.created_at),
-      user: like.user ? {
-        id: like.user.id,
-        fullName: like.user.full_name,
-        username: like.user.username,
-        role: like.user.role,
-        isActive: like.user.is_active,
-        createdAt: new Date(like.user.created_at),
-        updatedAt: new Date(like.user.updated_at)
-      } : undefined
-    }));
   } catch (error) {
-    console.error('Error en getProfileLikes:', error);
+    console.error('Error en toggleFavorite:', error);
     throw error;
   }
 };
