@@ -31,10 +31,11 @@ export interface Profile {
   placeTags: string[];
   
   // Metadata
-  isFavorite?: boolean;
   isAvailable?: boolean;
   createdAt: Date;
   createdByUser?: User; // Usuario que creó el perfil
+  likesCount?: number; // Conteo total de likes
+  isLikedByCurrentUser?: boolean; // Si el usuario actual le dio like
 }
 
 export interface MediaItem {
@@ -60,4 +61,12 @@ export interface CreateUserData {
   username: string;
   password: string;
   role: 'admin' | 'user';
+}
+
+export interface ProfileLike {
+  id: string;
+  profileId: string;
+  userId: string;
+  user?: User;
+  createdAt: Date;
 }

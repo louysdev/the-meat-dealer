@@ -27,8 +27,8 @@ function App() {
     addProfile,
     updateProfile,
     deleteProfile,
-    toggleFavorite
-  } = useProfiles();
+    toggleLike
+  } = useProfiles(currentUser);
 
   const { modal, hideModal, showSuccess, showError, showConfirm } = useModal();
 
@@ -132,12 +132,13 @@ function App() {
   };
 
   const handleToggleFavorite = async (id: string) => {
+  const handleToggleLike = async (id: string) => {
     try {
-      await toggleFavorite(id);
+      await toggleLike(id);
     } catch (error) {
       showError(
-        'Error de Favoritos',
-        'No se pudo actualizar el estado de favorito. Por favor intenta de nuevo.'
+        'Error de Like',
+        'No se pudo actualizar el like. Por favor intenta de nuevo.'
       );
     }
   };
@@ -218,7 +219,7 @@ function App() {
             <Catalog 
               profiles={profiles}
               onProfileClick={handleProfileClick}
-              onToggleFavorite={handleToggleFavorite}
+              onToggleLike={handleToggleLike}
             />
           )}
 

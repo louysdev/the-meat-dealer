@@ -55,3 +55,10 @@ export interface DatabaseUser {
   updated_at: string;
   created_by?: string;
 }
+
+export interface DatabaseProfileLike {
+  id: string;
+  profile_id: string;
+  user_id: string;
+  created_at: string;
+}
