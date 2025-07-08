@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Meat Dealer - Catálogo Romántico</title>
+    <meta name="description" content="Catálogo romántico de perfiles únicos con diseño elegante y sofisticado">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lively-baklava-7cc15c.netlify.app/">
+    <meta property="og:title" content="The Meat Dealer - Catálogo Romántico">
+    <meta property="og:description" content="Catálogo romántico de perfiles únicos con diseño elegante y sofisticado">
+    <meta property="og:image" content="https://lively-baklava-7cc15c.netlify.app/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://lively-baklava-7cc15c.netlify.app/">
+    <meta property="twitter:title" content="The Meat Dealer - Catálogo Romántico">
+    <meta property="twitter:description" content="Catálogo romántico de perfiles únicos con diseño elegante y sofisticado">
+    <meta property="twitter:image" content="https://lively-baklava-7cc15c.netlify.app/og-image.jpg">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Script para manejar meta tags dinámicos -->
+    <script>
+      // Función para actualizar meta tags cuando se comparte un perfil específico
+      window.updateMetaTags = function(profile) {
+        const title = `${profile.firstName} ${profile.lastName} - ${profile.age} años | The Meat Dealer`;
+        const description = profile.residence 
+          ? `Perfil de ${profile.firstName} de ${profile.residence}` 
+          : `Perfil de ${profile.firstName}`;
+        const image = profile.photos[0] || profile.videos[0] || 'https://lively-baklava-7cc15c.netlify.app/og-image.jpg';
+        
+        // Actualizar título
+        document.title = title;
+        
+        // Actualizar meta tags
+        document.querySelector('meta[name="description"]').setAttribute('content', description);
+        document.querySelector('meta[property="og:title"]').setAttribute('content', title);
+        document.querySelector('meta[property="og:description"]').setAttribute('content', description);
+        document.querySelector('meta[property="og:image"]').setAttribute('content', image);
+        document.querySelector('meta[property="twitter:title"]').setAttribute('content', title);
+        document.querySelector('meta[property="twitter:description"]').setAttribute('content', description);
+        document.querySelector('meta[property="twitter:image"]').setAttribute('content', image);
+      };
+    </script>
+  </body>
+</html>
