@@ -10,6 +10,7 @@ interface ShareButtonProps {
     videos: string[];
     age: number;
     residence?: string;
+    isAvailable?: boolean;
   };
   className?: string;
 }
@@ -23,8 +24,13 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
 
   // Crear mensaje mejorado para todas las plataformas
   const createShareMessage = () => {
+    const availabilityStatus = profile.isAvailable !== false 
+      ? '😏 Disponible' 
+      : '😔 No disponible';
+    
     return `🔥 *${shareTitle}* 🔥\n\n` +
       `📍 ${profile.residence || 'Ubicación no especificada'}\n\n` +
+      `${availabilityStatus}\n\n` +
       `👀 Ver perfil completo: ${shareUrl}`;
   };
 
@@ -139,23 +145,6 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
                 </div>
                 <span className="text-sm">Telegram</span>
               </button>
-
-              {/* Abrir en nueva pestaña */}
-              <button
-                onClick={() => window.open(shareUrl, '_blank')}
-                className="w-full flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span className="text-sm">Abrir en nueva pestaña</span>
-              </button>
-            </div>
-
-            {/* Message preview */}
-            <div className="p-3 bg-gray-800/50 border-t border-gray-700">
-              <p className="text-gray-400 text-xs mb-2 font-medium">Vista previa del mensaje:</p>
-              <p className="text-gray-300 text-xs leading-relaxed whitespace-pre-line">
-                {createShareMessage()}
-              </p>
             </div>
           </div>
         </>
