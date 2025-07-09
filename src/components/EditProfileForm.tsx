@@ -138,7 +138,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
             <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
               Información Básica
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Nombre *
@@ -185,7 +185,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
             <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
               Situación Económica
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Salario Neto (RD$)
@@ -228,7 +228,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
             <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
               Características Físicas
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Altura
@@ -299,7 +299,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
             <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
               Ubicación
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Nacionalidad
@@ -385,29 +385,29 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
             <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
               Estado de Disponibilidad
             </h3>
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center space-x-3 cursor-pointer">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="flex items-center justify-center space-x-3 cursor-pointer bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-green-500 transition-colors group">
                 <input
                   type="radio"
                   name="availability"
                   checked={formData.isAvailable}
                   onChange={() => setFormData({ ...formData, isAvailable: true })}
-                  className="w-4 h-4 text-green-600 bg-gray-800 border-gray-600 focus:ring-green-500"
+                  className="w-5 h-5 text-green-600 bg-gray-800 border-gray-600 focus:ring-green-500"
                 />
-                <span className="text-white flex items-center space-x-2">
+                <span className="text-white flex items-center space-x-2 font-medium">
                   <span className="text-2xl">😏</span>
                   <span>Disponible</span>
                 </span>
               </label>
-              <label className="flex items-center space-x-3 cursor-pointer">
+              <label className="flex items-center justify-center space-x-3 cursor-pointer bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-red-500 transition-colors group">
                 <input
                   type="radio"
                   name="availability"
                   checked={!formData.isAvailable}
                   onChange={() => setFormData({ ...formData, isAvailable: false })}
-                  className="w-4 h-4 text-red-600 bg-gray-800 border-gray-600 focus:ring-red-500"
+                  className="w-5 h-5 text-red-600 bg-gray-800 border-gray-600 focus:ring-red-500"
                 />
-                <span className="text-white flex items-center space-x-2">
+                <span className="text-white flex items-center space-x-2 font-medium">
                   <span className="text-2xl">😔</span>
                   <span>No disponible</span>
                 </span>

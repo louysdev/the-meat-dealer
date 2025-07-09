@@ -158,13 +158,13 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
         {media.length < maxItems && (
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="aspect-[2/3] border-2 border-dashed border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-red-500 hover:bg-red-500/5 transition-colors"
+            className="col-span-full border-2 border-dashed border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-red-500 hover:bg-red-500/5 transition-colors py-8"
           >
             <div className="flex space-x-2 mb-2">
               <Camera className="w-6 h-6 text-gray-400" />
               <Video className="w-6 h-6 text-gray-400" />
             </div>
-            <span className="text-sm text-gray-400 text-center px-2">
+            <span className="text-sm text-gray-400 text-center px-4">
               Agregar foto o video
             </span>
           </div>

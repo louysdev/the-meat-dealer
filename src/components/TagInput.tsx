@@ -66,15 +66,16 @@ export const TagInput: React.FC<TagInputProps> = ({
           placeholder={placeholder}
           className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
         />
-        <button
-          type="button"
-          onClick={addTag}
-          className="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-1"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Agregar</span>
-        </button>
       </div>
+      
+      <button
+        type="button"
+        onClick={addTag}
+        className="w-full bg-red-700 hover:bg-red-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center space-x-2 font-medium"
+      >
+        <Plus className="w-4 h-4" />
+        <span>Agregar {label.includes('Música') ? 'Música' : 'Lugar'}</span>
+      </button>
     </div>
   );
 };
