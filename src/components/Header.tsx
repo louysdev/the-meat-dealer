@@ -127,16 +127,17 @@ export const Header: React.FC<HeaderProps> = ({
 
               {/* Navigation Items */}
               <button
-                onClick={() => handleMenuItemClick(() => onViewChange('catalog'))}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
-                  currentView === 'catalog'
-                    ? 'bg-red-600 text-white shadow-lg'
-                    : 'text-white hover:bg-white/10'
-                }`}
-              >
-                <Grid3X3 className="w-5 h-5" />
-                <span>Catálogo</span>
               </button>
+
+              {currentUser?.role === 'admin' && onUserManagement && (
+                <button
+                  onClick={() => handleMenuItemClick(onUserManagement)}
+                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all duration-300 text-white hover:bg-white/10"
+                >
+                  <Users className="w-5 h-5" />
+                  <span>Gestión de Usuarios</span>
+                </button>
+              )}
 
               <button
                 onClick={() => handleMenuItemClick(() => onViewChange('add'))}

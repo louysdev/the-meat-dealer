@@ -81,8 +81,8 @@ export const Catalog: React.FC<CatalogProps> = ({
         <h1 className="text-4xl font-bold text-white mb-2">
           Catálogo de Perfiles
         </h1>
-        <p className="text-gray-400">
-          Descubre {profiles.length} perfiles únicos • {totalLikes} me gusta totales • {likedCount} que te gustan
+        <p className="text-gray-400 text-lg">
+          Encuentra tu conexión perfecta en nuestro exclusivo catálogo
         </p>
       </div>
 
@@ -102,7 +102,7 @@ export const Catalog: React.FC<CatalogProps> = ({
 
       {/* Filter Controls */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             {/* Filters Button */}
             <button
@@ -144,11 +144,6 @@ export const Catalog: React.FC<CatalogProps> = ({
                 <span>Limpiar</span>
               </button>
             )}
-          </div>
-
-          {/* Results count */}
-          <div className="text-gray-400 text-sm">
-            Mostrando {filteredProfiles.length} de {profiles.length} perfiles
           </div>
         </div>
 
@@ -252,6 +247,13 @@ export const Catalog: React.FC<CatalogProps> = ({
           )}
         </div>
       )}
+
+      {/* Results count - moved to bottom */}
+      <div className="mb-6 text-center">
+        <div className="text-gray-400 text-sm">
+          Mostrando {filteredProfiles.length} de {profiles.length} perfiles • {totalLikes} me gusta totales • {likedCount} que te gustan
+        </div>
+      </div>
 
       {/* Profile Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
