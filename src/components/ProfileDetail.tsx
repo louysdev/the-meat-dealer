@@ -221,11 +221,31 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                 <div className="flex items-center space-x-4">
                   <span>{profile.photos.length} fotos • {profile.videos.length} videos</span>
                   <div className="flex items-center space-x-1 text-red-400">
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-4 h-4" />
-                    <span>Creado {timeAgo}</span>
+                    <div className="flex items-center space-x-1">
+                      <Clock className="w-4 h-4" />
+                      <span>Creado {timeAgo}</span>
+                    </div>
                   </div>
                 </div>
+
+                {/* Botón de me gusta */}
+                <button
+                  onClick={handleLikeClick}
+                  className={`p-3 rounded-full backdrop-blur-sm transition-all duration-300 relative ${
+                    profile.isLikedByCurrentUser 
+                      ? 'bg-red-600/90 text-white' 
+                      : 'bg-gray-800/50 text-gray-300 hover:bg-red-600/70 hover:text-white'
+                  }`}
+                >
+                  <Heart className={`w-6 h-6 ${profile.isLikedByCurrentUser ? 'fill-current' : ''}`} />
+                  
+                  {/* Contador de likes */}
+                  {profile.likesCount > 0 && (
+                    <div className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-bold shadow-lg">
+                      {profile.likesCount > 99 ? '99+' : profile.likesCount}
+                    </div>
+                  )}
+                </button>
               </div>
 
               {profile.instagram && (
@@ -233,25 +253,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                   href={`https://instagram.com/${profile.instagram.replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-              
-              {/* Botón de me gusta */}
-              <button
-                onClick={handleLikeClick}
-                className={`p-3 rounded-full backdrop-blur-sm transition-all duration-300 relative ${
-                  profile.isLikedByCurrentUser 
-                    ? 'bg-red-600/90 text-white' 
-                    : 'bg-gray-800/50 text-gray-300 hover:bg-red-600/70 hover:text-white'
-                }`}
-              >
-                <Heart className={`w-6 h-6 ${profile.isLikedByCurrentUser ? 'fill-current' : ''}`} />
-                
-                {/* Contador de likes */}
-                {profile.likesCount > 0 && (
-                  <div className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-bold shadow-lg">
-                    {profile.likesCount > 99 ? '99+' : profile.likesCount}
-                  </div>
-                )}
-              </button>
+                  className="flex items-center space-x-2 text-gray-300 hover:text-white"
                 >
                   <Instagram className="w-4 h-4" />
                   <span>{profile.instagram}</span>
@@ -424,7 +426,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                             <div className="bg-purple-600/20 text-purple-300 px-2 py-1 rounded text-xs">
                               Admin
                             </div>
-                          )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -436,33 +438,10 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                         </div>
                       </div>
                     )}
-            <div className="flex items-center justify-between">
-              {profile.instagram && (
-                <a
-                  href={`https://instagram.com/${profile.instagram.replace('@', '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-700 hover:to-purple-700 transition-colors"
-                >
-                  <Instagram className="w-4 h-4" />
-                  <span>{profile.instagram}</span>
-                </a>
-              )}
-              
-              {/* Badge de disponibilidad */}
-              <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
-                profile.isAvailable !== false
-                  ? 'bg-green-600/20 text-green-300 border border-green-600/30'
-                  : 'bg-red-600/20 text-red-300 border border-red-600/30'
-              }`}>
-                <span className="text-lg">
-                  {profile.isAvailable !== false ? '😏' : '😔'}
-                </span>
-                <span>
-                  {profile.isAvailable !== false ? 'Disponible' : 'No disponible'}
-                </span>
+                  </div>
+                ) : null}
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
