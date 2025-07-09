@@ -24,13 +24,13 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
 
   // Crear mensaje mejorado para todas las plataformas
   const createShareMessage = () => {
-    const availabilityStatus = profile.isAvailable !== false 
+    const availabilityStatus = profile.isAvailable
       ? '😏 Disponible' 
       : '😔 No disponible';
     
-    return `🔥 *${shareTitle}* 🔥\n\n` +
-      `📍 ${profile.residence || 'Ubicación no especificada'}\n\n` +
-      `${availabilityStatus}\n\n` +
+    return `🔥 ${shareTitle}\n` +
+      `📍 ${profile.residence || 'Ubicación no especificada'}\n` +
+      `${availabilityStatus}\n` +
       `👀 Ver perfil completo: ${shareUrl}`;
   };
 
@@ -93,8 +93,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
           {/* Menú de compartir */}
           <div className="absolute top-full right-0 mt-2 w-64 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
             <div className="p-4 border-b border-gray-700">
-              <h3 className="text-white font-medium mb-1">Compartir perfil</h3>
-              <p className="text-gray-400 text-sm">{shareTitle}</p>
+              <h3 className="text-white font-medium">Compartir perfil</h3>
             </div>
 
             <div className="p-2 space-y-1">
