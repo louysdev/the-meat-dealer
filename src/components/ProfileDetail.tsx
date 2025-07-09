@@ -129,38 +129,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
               </div>
             </div>
 
-            {/* Media grid on mobile */}
-            <div className="grid grid-cols-3 gap-2 lg:hidden">
-              {allMedia.map((media, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleMediaClick(index)}
-                  className="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity relative"
-                >
-                  {media.type === 'photo' ? (
-                    <img
-                      src={media.url}
-                      alt={`Media ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="relative w-full h-full">
-                      <video
-                        src={media.url}
-                        className="w-full h-full object-cover"
-                        muted
-                        preload="metadata"
-                      />
-                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                        <div className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
 
             {/* Auto-sliding media on desktop */}
             <div className="hidden lg:block h-[600px] rounded-2xl overflow-hidden">
