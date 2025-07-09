@@ -454,9 +454,9 @@ export const toggleLike = async (profileId: string, userId: string): Promise<{ i
       .select('id')
       .eq('profile_id', profileId)
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
-    if (checkError && checkError.code !== 'PGRST116') {
+    if (checkError) {
       throw new Error(`Error verificando like: ${checkError.message}`);
     }
 
