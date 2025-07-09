@@ -127,6 +127,15 @@ export const Header: React.FC<HeaderProps> = ({
 
               {/* Navigation Items */}
               <button
+                onClick={() => handleMenuItemClick(() => onViewChange('catalog'))}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  currentView === 'catalog'
+                    ? 'bg-red-600 text-white shadow-lg'
+                    : 'text-white hover:bg-white/10'
+                }`}
+              >
+                <Grid3X3 className="w-5 h-5" />
+                <span>Catálogo</span>
               </button>
 
               {currentUser?.role === 'admin' && onUserManagement && (
@@ -149,6 +158,8 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <Plus className="w-5 h-5" />
                 <span>Agregar Perfil</span>
+              </button>
+
               {currentUser?.role === 'admin' && onUserManagement && (
                 <button
                   onClick={() => handleMenuItemClick(onUserManagement)}
@@ -158,7 +169,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <span>Gestión de Usuarios</span>
                 </button>
               )}
-              </button>
+
               {/* Logout Button */}
               {onLogout && (
                 <button
