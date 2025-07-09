@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { 
-  ArrowLeft, 
-  Heart, 
-  MapPin, 
-  Calendar, 
-  Instagram, 
+import React, { useState } from "react";
+import {
+  ArrowLeft,
+  Heart,
+  MapPin,
+  Calendar,
+  Instagram,
   DollarSign,
   Briefcase,
   Home,
@@ -16,12 +16,13 @@ import {
   Trash2,
   Clock,
   Users,
-  ThumbsUp
-} from 'lucide-react';
-import { Profile } from '../types';
-import { MediaSlider } from './MediaSlider';
-import { ShareButton } from './ShareButton';
-import { getTimeAgo } from '../utils/dateUtils';
+  ThumbsUp,
+  Camera,
+} from "lucide-react";
+import { Profile } from "../types";
+import { MediaSlider } from "./MediaSlider";
+import { ShareButton } from "./ShareButton";
+import { getTimeAgo } from "../utils/dateUtils";
 
 interface ProfileDetailProps {
   profile: Profile;
@@ -30,25 +31,27 @@ interface ProfileDetailProps {
   onDelete?: (profile: Profile) => void;
 }
 
-export const ProfileDetail: React.FC<ProfileDetailProps> = ({ 
-  profile, 
-  onBack, 
-  onEdit, 
-  onDelete 
+export const ProfileDetail: React.FC<ProfileDetailProps> = ({
+  profile,
+  onBack,
+  onEdit,
+  onDelete,
 }) => {
   const [showFullscreenSlider, setShowFullscreenSlider] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
 
   // Combinar fotos y videos en un solo array de media
   const allMedia = [
-    ...profile.photos.map(url => ({ url, type: 'photo' as const })),
-    ...profile.videos.map(url => ({ url, type: 'video' as const }))
+    ...profile.photos.map((url) => ({ url, type: "photo" as const })),
+    ...profile.videos.map((url) => ({ url, type: "video" as const })),
   ];
 
   const handleMediaClick = (index: number) => {
     setSelectedMediaIndex(index);
     setShowFullscreenSlider(true);
   };
+
+
 
   const handleEditClick = () => {
     if (onEdit) {
@@ -75,13 +78,12 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
               className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <Grid3X3 className="w-4 h-4" />
               <span>Volver al catálogo</span>
             </button>
 
             {/* Action buttons - Solo iconos con fondo negro elegante */}
             <div className="flex items-center space-x-3">
-              <ShareButton 
+              <ShareButton
                 profile={{
                   id: profile.id,
                   firstName: profile.firstName,
@@ -89,7 +91,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                   photos: profile.photos,
                   videos: profile.videos,
                   age: profile.age,
-                  residence: profile.residence
+                  residence: profile.residence,
                 }}
               />
               {onEdit && (
@@ -122,21 +124,13 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
             {/* Main media on mobile, hidden on desktop */}
             <div className="lg:hidden">
               <div className="aspect-[2/3] rounded-2xl overflow-hidden">
-                <MediaSlider
-                  media={allMedia}
-                  autoPlay={false}
-                />
+                <MediaSlider media={allMedia} autoPlay={false} />
               </div>
             </div>
 
-
             {/* Auto-sliding media on desktop */}
             <div className="hidden lg:block h-[600px] rounded-2xl overflow-hidden">
-              <MediaSlider
-                media={allMedia}
-                autoPlay={true}
-                interval={4000}
-              />
+              <MediaSlider media={allMedia} autoPlay={true} interval={4000} />
             </div>
           </div>
 
@@ -150,18 +144,13 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                     {profile.firstName} {profile.lastName}
                   </h1>
                   <div className="flex items-center space-x-4 text-gray-300">
-                    <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
-                      profile.isAvailable !== false
-                        ? 'bg-green-600/20 text-green-300 border border-green-600/30'
-                        : 'bg-red-600/20 text-red-300 border border-red-600/30'
-                    }`}>
-                      <span className="text-lg">
-                        {profile.isAvailable !== false ? '😏' : '😔'}
-                      </span>
-                      <span>
-                        {profile.isAvailable !== false ? 'Disponible' : 'No disponible'}
-                      </span>
-                    </div>
+                    {profile.createdByUser && (
+                      <div className="flex items-center space-x-1 *:text-gray-300">
+                        <User className="w-4 h-4" />
+                        <span>@{profile.createdByUser.username}</span>
+                      </div>
+                    )}
+
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
                       <span>{profile.age} años</span>
@@ -174,44 +163,70 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                     )}
                   </div>
                 </div>
-                <Heart className="w-8 h-8 text-red-400 fill-current animate-pulse" />
+                <button
+                  className={`relative p-3 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                    profile.isLikedByCurrentUser
+                      ? 'bg-red-600 text-white shadow-lg scale-110'
+                      : 'bg-gray-800/50 text-gray-300 hover:bg-red-600/70 hover:text-white border border-gray-600 hover:border-red-500'
+                  }`}
+                  title={profile.isLikedByCurrentUser ? 'Quitar me gusta' : 'Me gusta'}
+                >
+                  <Heart className={`w-6 h-6 ${profile.isLikedByCurrentUser ? 'fill-current' : ''}`} />
+                  {profile.likesCount > 0 && (
+                    <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-bold shadow-lg">
+                      {profile.likesCount > 99 ? '99+' : profile.likesCount}
+                    </div>
+                  )}
+                </button>
               </div>
 
               {/* Media count and creation date */}
               <div className="flex items-center justify-between mb-4 text-gray-400 text-sm">
-                <div className="flex items-center space-x-4">
-                  <span>{profile.photos.length} fotos • {profile.videos.length} videos</span>
-                  <div className="flex items-center space-x-1 text-red-400">
-                    <Heart className="w-4 h-4 fill-current" />
-                    <span className="font-medium">{profile.likesCount}</span>
-                    <span>me gusta</span>
-                  </div>
+                <div className="flex items-center space-x-1">
+                  <Camera className="w-4 h-4 rotate-180" />
+                  <span>
+                    {profile.photos.length} fotos • {profile.videos.length}{" "}
+                    videos
+                  </span>
                 </div>
-                <div className="flex items-center space-x-4">
-                  {profile.createdByUser && (
-                    <div className="flex items-center space-x-1">
-                      <User className="w-4 h-4" />
-                      <span>Por @{profile.createdByUser.username}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-4 h-4" />
-                    <span>Creado {timeAgo}</span>
-                  </div>
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-4 h-4" />
+                  <span>Creado {timeAgo}</span>
                 </div>
               </div>
 
-              {profile.instagram && (
-                <a
-                  href={`https://instagram.com/${profile.instagram.replace('@', '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-700 hover:to-purple-700 transition-colors"
+              <div className="flex items-center space-x-4  justify-between">
+                {profile.instagram && (
+                  <a
+                    href={`https://instagram.com/${profile.instagram.replace(
+                      "@",
+                      ""
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-4 py-2 rounded-full hover:from-pink-700 hover:to-purple-700 transition-colors"
+                  >
+                    <Instagram className="w-4 h-4" />
+                    <span>{profile.instagram}</span>
+                  </a>
+                )}
+                <div
+                  className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
+                    profile.isAvailable !== false
+                      ? "bg-green-600/20 text-green-300 border border-green-600/30"
+                      : "bg-red-600/20 text-red-300 border border-red-600/30"
+                  }`}
                 >
-                  <Instagram className="w-4 h-4" />
-                  <span>{profile.instagram}</span>
-                </a>
-              )}
+                  <span className="text-lg">
+                    {profile.isAvailable !== false ? "😏" : "😔"}
+                  </span>
+                  <span>
+                    {profile.isAvailable !== false
+                      ? "Disponible"
+                      : "No disponible"}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Economic Situation */}
@@ -222,25 +237,33 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                   <span>Situación Económica</span>
                 </h3>
                 <div className="space-y-3">
-                  {profile.netSalary && (
+                    {profile.netSalary && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Salario neto:</span>
                       <span className="text-white font-medium flex items-center space-x-1">
-                        <span className="text-green-400">RD$</span>
-                        <span>{profile.netSalary.replace('RD$', '').trim()}</span>
+                      <span className="text-white">RD$</span>
+                      <span>
+                        {Number(profile.netSalary.replace(/[^\d]/g, "")).toLocaleString('es-DO')}
+                      </span>
                       </span>
                     </div>
-                  )}
+                    )}
                   {profile.fatherJob && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Trabajo del padre:</span>
-                      <span className="text-white font-medium">{profile.fatherJob}</span>
+                      <span className="text-white font-medium">
+                        {profile.fatherJob}
+                      </span>
                     </div>
                   )}
                   {profile.motherJob && (
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Trabajo de la madre:</span>
-                      <span className="text-white font-medium">{profile.motherJob}</span>
+                      <span className="text-gray-400">
+                        Trabajo de la madre:
+                      </span>
+                      <span className="text-white font-medium">
+                        {profile.motherJob}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -259,16 +282,22 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                   <div className="text-white font-medium">{profile.height}</div>
                 </div>
                 <div className="bg-gray-700/30 rounded-lg p-3">
-                  <div className="text-gray-400 text-sm">Cuerpo</div>
-                  <div className="text-white font-medium">{profile.bodySize}</div>
+                  <div className="text-gray-400 text-sm">Culo</div>
+                  <div className="text-white font-medium">
+                    {profile.bodySize}
+                  </div>
                 </div>
                 <div className="bg-gray-700/30 rounded-lg p-3">
-                  <div className="text-gray-400 text-sm">Busto</div>
-                  <div className="text-white font-medium">{profile.bustSize}</div>
+                  <div className="text-gray-400 text-sm">Teta</div>
+                  <div className="text-white font-medium">
+                    {profile.bustSize}
+                  </div>
                 </div>
                 <div className="bg-gray-700/30 rounded-lg p-3">
                   <div className="text-gray-400 text-sm">Piel</div>
-                  <div className="text-white font-medium">{profile.skinColor}</div>
+                  <div className="text-white font-medium">
+                    {profile.skinColor}
+                  </div>
                 </div>
               </div>
             </div>
@@ -283,18 +312,24 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                 {profile.nationality && (
                   <div className="flex justify-between">
                     <span className="text-gray-400">Nacionalidad:</span>
-                    <span className="text-white font-medium">{profile.nationality}</span>
+                    <span className="text-white font-medium">
+                      {profile.nationality}
+                    </span>
                   </div>
                 )}
                 {profile.residence && (
                   <div className="flex justify-between">
                     <span className="text-gray-400">Residencia:</span>
-                    <span className="text-white font-medium">{profile.residence}</span>
+                    <span className="text-white font-medium">
+                      {profile.residence}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span className="text-gray-400">Vive:</span>
-                  <span className="text-white font-medium">{profile.livingWith}</span>
+                  <span className="text-white font-medium">
+                    {profile.livingWith}
+                  </span>
                 </div>
               </div>
             </div>
@@ -306,7 +341,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                   <Heart className="w-5 h-5 fill-current" />
                   <span>Gustos Personales</span>
                 </h3>
-                
+
                 <div className="space-y-6">
                   {/* Music Tags */}
                   {profile.musicTags.length > 0 && (
@@ -356,9 +391,9 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
               <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
                 <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center space-x-2">
                   <ThumbsUp className="w-5 h-5" />
-                  <span>Me Gusta ({profile.likesCount})</span>
+                  <span>Usuarios interesados</span>
                 </h3>
-                
+
                 {profile.likedByUsers.length > 0 ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -380,7 +415,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                               @{user.username}
                             </div>
                           </div>
-                          {user.role === 'admin' && (
+                          {user.role === "admin" && (
                             <div className="bg-purple-600/20 text-purple-300 px-2 py-1 rounded text-xs">
                               Admin
                             </div>
@@ -388,7 +423,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                         </div>
                       ))}
                     </div>
-                    
+
                     {profile.likedByUsers.length > 6 && (
                       <div className="text-center">
                         <div className="text-gray-400 text-sm">

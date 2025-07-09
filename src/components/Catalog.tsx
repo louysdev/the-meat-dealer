@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Search, Filter, Heart, X, ChevronDown } from 'lucide-react';
-import { Profile } from '../types';
-import { ProfileCard } from './ProfileCard';
+import React, { useState } from "react";
+import { Search, Filter, Heart, X, ChevronDown, Eraser } from "lucide-react";
+import { Profile } from "../types";
+import { ProfileCard } from "./ProfileCard";
 
 interface CatalogProps {
   profiles: Profile[];
@@ -9,68 +9,91 @@ interface CatalogProps {
   onToggleLike: (id: string) => void;
 }
 
-export const Catalog: React.FC<CatalogProps> = ({ 
-  profiles, 
-  onProfileClick, 
-  onToggleLike
+export const Catalog: React.FC<CatalogProps> = ({
+  profiles,
+  onProfileClick,
+  onToggleLike,
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'age' | 'recent' | 'likes'>('recent');
-  const [filterHeight, setFilterHeight] = useState<string>('all');
-  const [filterBodySize, setFilterBodySize] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "age" | "recent" | "likes">(
+    "recent"
+  );
+  const [filterHeight, setFilterHeight] = useState<string>("all");
+  const [filterBodySize, setFilterBodySize] = useState<string>("all");
   const [showLikedOnly, setShowLikedOnly] = useState(false);
-  const [filterAvailability, setFilterAvailability] = useState<string>('all');
+  const [filterAvailability, setFilterAvailability] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
 
   // Filter and sort profiles
   const filteredProfiles = profiles
-    .filter(profile => {
-      const matchesSearch = 
+    .filter((profile) => {
+      const matchesSearch =
         profile.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         profile.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         profile.residence?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        profile.musicTags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        profile.placeTags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+        profile.musicTags.some((tag) =>
+          tag.toLowerCase().includes(searchTerm.toLowerCase())
+        ) ||
+        profile.placeTags.some((tag) =>
+          tag.toLowerCase().includes(searchTerm.toLowerCase())
+        );
 
-      const matchesHeight = filterHeight === 'all' || profile.height === filterHeight;
-      const matchesBodySize = filterBodySize === 'all' || profile.bodySize === filterBodySize;
+      const matchesHeight =
+        filterHeight === "all" || profile.height === filterHeight;
+      const matchesBodySize =
+        filterBodySize === "all" || profile.bodySize === filterBodySize;
       const matchesLiked = !showLikedOnly || profile.isLikedByCurrentUser;
-      const matchesAvailability = filterAvailability === 'all' || 
-        (filterAvailability === 'available' && profile.isAvailable !== false) ||
-        (filterAvailability === 'unavailable' && profile.isAvailable === false);
+      const matchesAvailability =
+        filterAvailability === "all" ||
+        (filterAvailability === "available" && profile.isAvailable !== false) ||
+        (filterAvailability === "unavailable" && profile.isAvailable === false);
 
-      return matchesSearch && matchesHeight && matchesBodySize && matchesLiked && matchesAvailability;
+      return (
+        matchesSearch &&
+        matchesHeight &&
+        matchesBodySize &&
+        matchesLiked &&
+        matchesAvailability
+      );
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case 'name':
+        case "name":
           return a.firstName.localeCompare(b.firstName);
-        case 'age':
+        case "age":
           return a.age - b.age;
-        case 'likes':
+        case "likes":
           // Ordenar por número de likes (descendente)
           if (a.likesCount !== b.likesCount) {
             return b.likesCount - a.likesCount;
           }
           // Si tienen el mismo número de likes, ordenar por fecha
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case 'recent':
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        case "recent":
         default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
       }
     });
 
-  const likedCount = profiles.filter(p => p.isLikedByCurrentUser).length;
+  const likedCount = profiles.filter((p) => p.isLikedByCurrentUser).length;
   const totalLikes = profiles.reduce((sum, p) => sum + p.likesCount, 0);
 
   // Verificar si hay filtros activos
-  const hasActiveFilters = filterHeight !== 'all' || filterBodySize !== 'all' || filterAvailability !== 'all' || sortBy !== 'recent';
+  const hasActiveFilters =
+    filterHeight !== "all" ||
+    filterBodySize !== "all" ||
+    filterAvailability !== "all" ||
+    sortBy !== "recent";
 
   const clearAllFilters = () => {
-    setFilterHeight('all');
-    setFilterBodySize('all');
-    setFilterAvailability('all');
-    setSortBy('recent');
+    setFilterHeight("all");
+    setFilterBodySize("all");
+    setFilterAvailability("all");
+    setSortBy("recent");
     setShowLikedOnly(false);
   };
 
@@ -79,10 +102,10 @@ export const Catalog: React.FC<CatalogProps> = ({
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-white mb-2">
-          Catálogo de Perfiles
+          Catálogo de Mujeres
         </h1>
         <p className="text-gray-400 text-lg">
-          Encuentra tu conexión perfecta en nuestro exclusivo catálogo
+          Encuentra tu mujer perfecta en nuestro exclusivo catálogo
         </p>
       </div>
 
@@ -109,8 +132,8 @@ export const Catalog: React.FC<CatalogProps> = ({
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
                 showFilters || hasActiveFilters
-                  ? 'bg-red-600 text-white shadow-lg'
-                  : 'bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50'
+                  ? "bg-red-600 text-white shadow-lg"
+                  : "bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50"
               }`}
             >
               <Filter className="w-5 h-5" />
@@ -118,7 +141,11 @@ export const Catalog: React.FC<CatalogProps> = ({
               {hasActiveFilters && (
                 <div className="w-2 h-2 bg-white rounded-full"></div>
               )}
-              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-4 h-4 transition-transform duration-300 ${
+                  showFilters ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             {/* Liked Only Toggle */}
@@ -126,11 +153,13 @@ export const Catalog: React.FC<CatalogProps> = ({
               onClick={() => setShowLikedOnly(!showLikedOnly)}
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
                 showLikedOnly
-                  ? 'bg-red-600 text-white shadow-lg'
-                  : 'bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50'
+                  ? "bg-red-600 text-white shadow-lg"
+                  : "bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50"
               }`}
             >
-              <Heart className={`w-5 h-5 ${showLikedOnly ? 'fill-current' : ''}`} />
+              <Heart
+                className={`w-5 h-5 ${showLikedOnly ? "fill-current" : ""}`}
+              />
               <span>Solo me gusta</span>
             </button>
 
@@ -140,7 +169,7 @@ export const Catalog: React.FC<CatalogProps> = ({
                 onClick={clearAllFilters}
                 className="flex items-center space-x-2 px-4 py-3 rounded-xl text-gray-400 hover:text-white transition-colors"
               >
-                <X className="w-4 h-4" />
+                <Eraser className="w-4 h-4" />
                 <span>Limpiar</span>
               </button>
             )}
@@ -149,7 +178,7 @@ export const Catalog: React.FC<CatalogProps> = ({
 
         {/* Expanded Filters */}
         {showFilters && (
-          <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 animate-in slide-in-from-top-2 duration-300">
+          <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 mt-8 border border-gray-700/50 animate-in slide-in-from-top-2 duration-300">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Sort */}
               <div>
@@ -188,7 +217,7 @@ export const Catalog: React.FC<CatalogProps> = ({
               {/* Body Size Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Tamaño del cuerpo
+                  Tamaño del Culo
                 </label>
                 <select
                   value={filterBodySize}
@@ -234,8 +263,8 @@ export const Catalog: React.FC<CatalogProps> = ({
           </h3>
           <p className="text-gray-500 mb-4">
             {searchTerm || hasActiveFilters || showLikedOnly
-              ? 'Intenta ajustar tus filtros de búsqueda'
-              : 'Aún no hay perfiles en el catálogo'}
+              ? "Intenta ajustar tus filtros de búsqueda"
+              : "Aún no hay perfiles en el catálogo"}
           </p>
           {(hasActiveFilters || showLikedOnly) && (
             <button
@@ -251,12 +280,13 @@ export const Catalog: React.FC<CatalogProps> = ({
       {/* Results count - moved to bottom */}
       <div className="mb-6 text-center">
         <div className="text-gray-400 text-sm">
-          Mostrando {filteredProfiles.length} de {profiles.length} perfiles • {totalLikes} me gusta totales • {likedCount} que te gustan
+          Mostrando {filteredProfiles.length} de {profiles.length} perfiles •{" "}
+          {totalLikes} me gusta totales
         </div>
       </div>
 
       {/* Profile Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 p-4">
         {filteredProfiles.map((profile) => (
           <ProfileCard
             key={profile.id}

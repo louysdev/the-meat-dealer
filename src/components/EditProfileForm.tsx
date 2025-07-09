@@ -245,7 +245,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Tamaño del Cuerpo
+                  Tamaño del Culo
                 </label>
                 <select
                   value={formData.bodySize}
@@ -262,7 +262,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Tamaño del Busto
+                  Tamaño de Teta
                 </label>
                 <select
                   value={formData.bustSize}

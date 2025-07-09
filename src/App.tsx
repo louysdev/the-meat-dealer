@@ -223,7 +223,10 @@ function App() {
           )}
 
           {currentView === 'add' && (
-            <AddProfileForm onSubmit={handleAddProfile} />
+            <AddProfileForm 
+              onSubmit={handleAddProfile}
+              onViewChange={handleViewChange}
+            />
           )}
 
           {currentView === 'edit' && selectedProfile && (
@@ -257,7 +260,6 @@ function App() {
           {currentView === 'user-management' && currentUser && (
             <UserManagement 
               currentUser={currentUser}
-              onClose={handleBackToCatalog}
             />
           )}
       </div>

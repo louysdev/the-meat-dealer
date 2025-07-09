@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Trash2, UserCheck, UserX, Eye, EyeOff } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, UserCheck, UserX, Eye, EyeOff, UserRoundPlus } from 'lucide-react';
 import { User, CreateUserData } from '../types';
 import { getUsers, createUser, updateUser, toggleUserStatus, deleteUser } from '../services/userService';
 import { Modal } from './Modal';
@@ -7,10 +7,9 @@ import { LoadingSpinner } from './LoadingSpinner';
 
 interface UserManagementProps {
   currentUser: User;
-  onClose: () => void;
 }
 
-export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onClose }) => {
+export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -156,16 +155,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onC
           <div className="flex space-x-3">
             <button
               onClick={() => setShowCreateForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white  px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
             >
-              <Plus className="w-4 h-4" />
-              <span>Nuevo Usuario</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              Cerrar
+              <UserRoundPlus className="w-4 h-4" />
+              <span>Crear</span>
             </button>
           </div>
         </div>
@@ -246,7 +239,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onC
               <div className="flex space-x-3">
                 <button
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
                 >
                   {editingUser ? 'Actualizar' : 'Crear'} Usuario
                 </button>

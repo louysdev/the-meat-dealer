@@ -33,10 +33,10 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-3xl border border-gray-700 group relative"
+      className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl overflow-hidden cursor-pointer transform transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-3xl hover:-translate-y-2 border border-gray-700 group relative"
     >
       {/* Media */}
-      <div className="relative h-80 overflow-hidden">
+      <div className="relative h-96 sm:h-72 md:h-80 overflow-hidden">
         {firstMedia ? (
           <>
             {firstMedia.type === 'photo' ? (
@@ -126,22 +126,26 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       </div>
 
       {/* Content */}
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
         {/* Quick info */}
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="bg-gray-800/50 rounded-lg p-3">
-            <div className="text-gray-400">Altura</div>
-            <div className="text-white font-medium">{profile.height}</div>
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 text-sm">
+          <div className="bg-gray-800/50 rounded-lg p-2 sm:p-3">
+            <div className="text-gray-400 text-xs sm:text-sm">Altura</div>
+            <div className="text-white font-medium text-xs sm:text-sm">{profile.height}</div>
           </div>
-          <div className="bg-gray-800/50 rounded-lg p-3">
-            <div className="text-gray-400">Cuerpo</div>
-            <div className="text-white font-medium">{profile.bodySize}</div>
+          <div className="bg-gray-800/50 rounded-lg p-2 sm:p-3">
+            <div className="text-gray-400 text-xs sm:text-sm">Culo</div>
+            <div className="text-white font-medium text-xs sm:text-sm">{profile.bodySize}</div>
+          </div>
+           <div className="bg-gray-800/50 rounded-lg p-2 sm:p-3">
+            <div className="text-gray-400 text-xs sm:text-sm">Teta</div>
+            <div className="text-white font-medium text-xs sm:text-sm">{profile.bustSize}</div>
           </div>
         </div>
 
         {/* Tags preview */}
         {profile.musicTags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1 sm:gap-2">
             {profile.musicTags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
