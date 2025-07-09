@@ -1,2 +1,5 @@
+# Redirect profile pages to Netlify function for proper meta tags
+/profile/*    /.netlify/functions/profile    200
+
 # Netlify redirects for SPA routing
 /*    /index.html   200

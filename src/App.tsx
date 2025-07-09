@@ -39,10 +39,16 @@ function App() {
   // Manejar URLs compartidas
   React.useEffect(() => {
     const path = window.location.pathname;
-    const profileMatch = path.match(/^\/profile\/(.+)$/);
+    const hash = window.location.hash;
     
-    if (profileMatch) {
-      const profileId = profileMatch[1];
+    // Manejar rutas con hash (#/profile/id)
+    const hashProfileMatch = hash.match(/^#\/profile\/(.+)$/);
+    // Manejar rutas directas (/profile/id)
+    const pathProfileMatch = path.match(/^\/profile\/(.+)$/);
+    
+    const profileId = hashProfileMatch?.[1] || pathProfileMatch?.[1];
+    
+    if (profileId) {
       // Buscar el perfil por ID
       const profile = profiles.find(p => p.id === profileId);
       if (profile) {
@@ -52,6 +58,11 @@ function App() {
         // Actualizar meta tags para compartir
         if (window.updateMetaTags) {
           window.updateMetaTags(profile);
+        }
+        
+        // Actualizar la URL sin recargar
+        if (pathProfileMatch) {
+          window.history.replaceState({}, '', `/#/profile/${profileId}`);
         }
       }
     }
