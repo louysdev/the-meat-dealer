@@ -382,6 +382,63 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                 </div>
               </div>
             )}
+
+            {/* Sección de Me Gusta */}
+            {profile.likesCount > 0 && (
+              <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+                <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center space-x-2">
+                  <ThumbsUp className="w-5 h-5" />
+                  <span>Me Gusta ({profile.likesCount})</span>
+                </h3>
+                
+                {profile.likedByUsers.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {profile.likedByUsers.slice(0, 6).map((user) => (
+                        <div
+                          key={user.id}
+                          className="flex items-center space-x-3 bg-gray-700/30 rounded-lg p-3"
+                        >
+                          <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">
+                              {user.fullName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-white font-medium truncate">
+                              {user.fullName}
+                            </div>
+                            <div className="text-gray-400 text-sm">
+                              @{user.username}
+                            </div>
+                          </div>
+                          {user.role === 'admin' && (
+                            <div className="bg-purple-600/20 text-purple-300 px-2 py-1 rounded text-xs">
+                              Admin
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {profile.likedByUsers.length > 6 && (
+                      <div className="text-center">
+                        <div className="text-gray-400 text-sm">
+                          Y {profile.likedByUsers.length - 6} personas más...
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <Users className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">
+                      Los usuarios que dieron me gusta aparecerán aquí
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -79,6 +79,9 @@ export const AddProfileForm: React.FC<AddProfileFormProps> = ({ onSubmit }) => {
       photos,
       videos,
       age: parseInt(formData.age),
+      likesCount: 0,
+      isLikedByCurrentUser: false,
+      likedByUsers: []
     });
 
     // Reset form

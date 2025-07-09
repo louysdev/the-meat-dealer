@@ -89,6 +89,10 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
       videos,
       age: parseInt(formData.age),
       isAvailable: formData.isAvailable,
+      // Mantener los datos de likes existentes
+      likesCount: profile.likesCount,
+      isLikedByCurrentUser: profile.isLikedByCurrentUser,
+      likedByUsers: profile.likedByUsers
     };
 
     onSubmit(updatedProfile);
