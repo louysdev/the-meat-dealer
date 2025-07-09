@@ -7,21 +7,24 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Meat Dealer - Catálogo de Mujeres</title>
-    <meta name="description" content="Catálogo romántico de perfiles únicos con diseño elegante y sofisticado">
+    <meta name="description" content="Catálogo de mujeres exclusivas con diseño elegante y sofisticado">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lively-baklava-7cc15c.netlify.app/">
-    <meta property="og:title" content="The Meat Dealer - Catálogo Romántico">
-    <meta property="og:description" content="Catálogo romántico de perfiles únicos con diseño elegante y sofisticado">
-    <meta property="og:image" content="https://lively-baklava-7cc15c.netlify.app/og-image.jpg">
+    <meta property="og:title" content="The Meat Dealer - Catálogo de Mujeres">
+    <meta property="og:description" content="Catálogo de mujeres exclusivas con diseño elegante y sofisticado">
+    <meta property="og:image" content="https://lively-baklava-7cc15c.netlify.app/banner.jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://lively-baklava-7cc15c.netlify.app/">
-    <meta property="twitter:title" content="The Meat Dealer - Catálogo Romántico">
-    <meta property="twitter:description" content="Catálogo romántico de perfiles únicos con diseño elegante y sofisticado">
-    <meta property="twitter:image" content="https://lively-baklava-7cc15c.netlify.app/og-image.jpg">
+    <meta property="twitter:title" content="The Meat Dealer - Catálogo de Mujeres">
+    <meta property="twitter:description" content="Catálogo de mujeres exclusivas con diseño elegante y sofisticado">
+    <meta property="twitter:image" content="https://lively-baklava-7cc15c.netlify.app/banner.jpeg">
   </head>
   <body>
     <div id="root"></div>
@@ -35,7 +38,7 @@
         const description = profile.residence 
           ? `Perfil de ${profile.firstName} de ${profile.residence}` 
           : `Perfil de ${profile.firstName}`;
-        const image = profile.photos[0] || profile.videos[0] || 'https://lively-baklava-7cc15c.netlify.app/og-image.jpg';
+        const image = profile.photos[0] || profile.videos[0] || 'https://lively-baklava-7cc15c.netlify.app/banner.jpeg';
         
         // Actualizar título
         document.title = title;
