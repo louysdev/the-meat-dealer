@@ -28,13 +28,15 @@ interface ProfileDetailProps {
   onBack: () => void;
   onEdit?: (profile: Profile) => void;
   onDelete?: (profile: Profile) => void;
+  onToggleLike?: (id: string) => void;
 }
 
 export const ProfileDetail: React.FC<ProfileDetailProps> = ({ 
   profile, 
   onBack, 
   onEdit, 
-  onDelete 
+  onDelete,
+  onToggleLike
 }) => {
   const [showFullscreenSlider, setShowFullscreenSlider] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
@@ -62,6 +64,11 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
     }
   };
 
+  const handleLikeClick = () => {
+    if (onToggleLike) {
+      onToggleLike(profile.id);
+    }
+  };
   const timeAgo = getTimeAgo(profile.createdAt);
 
   return (
@@ -214,18 +221,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                 <div className="flex items-center space-x-4">
                   <span>{profile.photos.length} fotos • {profile.videos.length} videos</span>
                   <div className="flex items-center space-x-1 text-red-400">
-                    <Heart className="w-4 h-4 fill-current" />
-                    <span className="font-medium">{profile.likesCount}</span>
-                    <span>me gusta</span>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  {profile.createdByUser && (
-                    <div className="flex items-center space-x-1">
-                      <User className="w-4 h-4" />
-                      <span>Por @{profile.createdByUser.username}</span>
-                    </div>
-                  )}
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
                     <span>Creado {timeAgo}</span>
@@ -238,7 +233,25 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                   href={`https://instagram.com/${profile.instagram.replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-700 hover:to-purple-700 transition-colors"
+              
+              {/* Botón de me gusta */}
+              <button
+                onClick={handleLikeClick}
+                className={`p-3 rounded-full backdrop-blur-sm transition-all duration-300 relative ${
+                  profile.isLikedByCurrentUser 
+                    ? 'bg-red-600/90 text-white' 
+                    : 'bg-gray-800/50 text-gray-300 hover:bg-red-600/70 hover:text-white'
+                }`}
+              >
+                <Heart className={`w-6 h-6 ${profile.isLikedByCurrentUser ? 'fill-current' : ''}`} />
+                
+                {/* Contador de likes */}
+                {profile.likesCount > 0 && (
+                  <div className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-bold shadow-lg">
+                    {profile.likesCount > 99 ? '99+' : profile.likesCount}
+                  </div>
+                )}
+              </button>
                 >
                   <Instagram className="w-4 h-4" />
                   <span>{profile.instagram}</span>
@@ -408,11 +421,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                             <div className="text-white font-medium truncate">
                               {user.fullName}
                             </div>
-                            <div className="text-gray-400 text-sm">
-                              @{user.username}
-                            </div>
-                          </div>
-                          {user.role === 'admin' && (
                             <div className="bg-purple-600/20 text-purple-300 px-2 py-1 rounded text-xs">
                               Admin
                             </div>
@@ -428,17 +436,33 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                         </div>
                       </div>
                     )}
-                  </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <Users className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                    <p className="text-gray-400 text-sm">
-                      Los usuarios que dieron me gusta aparecerán aquí
-                    </p>
-                  </div>
-                )}
+            <div className="flex items-center justify-between">
+              {profile.instagram && (
+                <a
+                  href={`https://instagram.com/${profile.instagram.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-700 hover:to-purple-700 transition-colors"
+                >
+                  <Instagram className="w-4 h-4" />
+                  <span>{profile.instagram}</span>
+                </a>
+              )}
+              
+              {/* Badge de disponibilidad */}
+              <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
+                profile.isAvailable !== false
+                  ? 'bg-green-600/20 text-green-300 border border-green-600/30'
+                  : 'bg-red-600/20 text-red-300 border border-red-600/30'
+              }`}>
+                <span className="text-lg">
+                  {profile.isAvailable !== false ? '😏' : '😔'}
+                </span>
+                <span>
+                  {profile.isAvailable !== false ? 'Disponible' : 'No disponible'}
+                </span>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

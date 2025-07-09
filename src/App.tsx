@@ -240,6 +240,7 @@ function App() {
               onBack={handleBackToCatalog}
               onEdit={handleEditClick}
               onDelete={handleDeleteProfile}
+              onToggleLike={handleToggleLike}
             />
           )}
 
@@ -251,6 +252,7 @@ function App() {
                 setCurrentView('catalog');
                 setSelectedProfile(null);
               }}
+              onToggleLike={handleToggleLike}
             />
           )}
         </main>
