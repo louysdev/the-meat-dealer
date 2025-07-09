@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Profile } from '../types';
 import * as profileService from '../services/profileService';
 
-export const useProfiles = () => {
+export const useProfiles = (currentUserId?: string) => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -12,7 +12,7 @@ export const useProfiles = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await profileService.getProfiles();
+      const data = await profileService.getProfiles(currentUserId);
       setProfiles(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -60,28 +60,32 @@ export const useProfiles = () => {
     }
   };
 
-  // Alternar favorito
-  const toggleFavorite = async (profileId: string) => {
+  // Alternar like
+  const toggleLike = async (profileId: string) => {
     try {
       setError(null);
-      const profile = profiles.find(p => p.id === profileId);
-      if (!profile) return;
+      if (!currentUserId) {
+        throw new Error('Usuario no autenticado');
+      }
 
-      const newFavoriteStatus = !profile.isFavorite;
-      await profileService.toggleFavorite(profileId, newFavoriteStatus);
+      const { isLiked, likesCount } = await profileService.toggleLike(profileId, currentUserId);
       
       setProfiles(prev => prev.map(p => 
-        p.id === profileId ? { ...p, isFavorite: newFavoriteStatus } : p
+        p.id === profileId ? { 
+          ...p, 
+          isLikedByCurrentUser: isLiked,
+          likesCount: likesCount
+        } : p
       ));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error actualizando favorito');
+      setError(err instanceof Error ? err.message : 'Error actualizando like');
       throw err;
     }
   };
 
   useEffect(() => {
     loadProfiles();
-  }, []);
+  }, [currentUserId]);
 
   return {
     profiles,
@@ -90,7 +94,7 @@ export const useProfiles = () => {
     addProfile,
     updateProfile,
     deleteProfile,
-    toggleFavorite,
+    toggleLike,
     refreshProfiles: loadProfiles
   };
 };

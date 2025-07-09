@@ -2,14 +2,48 @@ import { supabase } from '../lib/supabase';
 import { Profile, MediaItem } from '../types';
 import { DatabaseProfile, DatabaseProfilePhoto } from '../lib/supabase';
 
+// Interfaz para los likes de perfiles
+interface ProfileLike {
+  id: string;
+  profile_id: string;
+  user_id: string;
+  created_at: string;
+  user?: {
+    id: string;
+    full_name: string;
+    username: string;
+    role: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
 // Convertir perfil de la base de datos al tipo de la aplicación
 const convertDatabaseProfileToProfile = (
   dbProfile: DatabaseProfile,
   media: MediaItem[],
-  createdByUser?: any
+  createdByUser?: any,
+  likes: ProfileLike[] = [],
+  currentUserId?: string
 ): Profile => {
   const photos = media.filter(m => m.type === 'photo').map(m => m.url);
   const videos = media.filter(m => m.type === 'video').map(m => m.url);
+
+  // Procesar likes
+  const likesCount = likes.length;
+  const isLikedByCurrentUser = currentUserId ? likes.some(like => like.user_id === currentUserId) : false;
+  const likedByUsers = likes
+    .filter(like => like.user)
+    .map(like => ({
+      id: like.user!.id,
+      fullName: like.user!.full_name,
+      username: like.user!.username,
+      role: like.user!.role as 'admin' | 'user',
+      isActive: like.user!.is_active,
+      createdAt: new Date(like.user!.created_at),
+      updatedAt: new Date(like.user!.updated_at)
+    }));
 
   return {
     id: dbProfile.id,
@@ -29,7 +63,9 @@ const convertDatabaseProfileToProfile = (
     instagram: dbProfile.instagram,
     musicTags: dbProfile.music_tags,
     placeTags: dbProfile.place_tags,
-    isFavorite: dbProfile.is_favorite,
+    likesCount,
+    isLikedByCurrentUser,
+    likedByUsers,
     isAvailable: dbProfile.is_available,
     photos,
     videos,
@@ -64,7 +100,6 @@ const convertProfileToDatabaseProfile = (profile: Omit<Profile, 'id' | 'createdA
   instagram: profile.instagram,
   music_tags: profile.musicTags,
   place_tags: profile.placeTags,
-  is_favorite: profile.isFavorite || false,
   is_available: profile.isAvailable !== undefined ? profile.isAvailable : true,
 });
 
@@ -123,7 +158,7 @@ const base64ToFile = (base64: string, fileName: string): File => {
 };
 
 // Obtener todos los perfiles
-export const getProfiles = async (): Promise<Profile[]> => {
+export const getProfiles = async (currentUserId?: string): Promise<Profile[]> => {
   try {
     // Obtener perfiles
     const { data: profiles, error: profilesError } = await supabase
@@ -160,6 +195,26 @@ export const getProfiles = async (): Promise<Profile[]> => {
       throw new Error(`Error obteniendo media: ${mediaError.message}`);
     }
 
+    // Obtener likes para todos los perfiles
+    const { data: likes, error: likesError } = await supabase
+      .from('profile_likes')
+      .select(`
+        *,
+        user:user_id(
+          id,
+          full_name,
+          username,
+          role,
+          is_active,
+          created_at,
+          updated_at
+        )
+      `);
+
+    if (likesError) {
+      throw new Error(`Error obteniendo likes: ${likesError.message}`);
+    }
+
     // Agrupar media por perfil
     const mediaByProfile = (media || []).reduce((acc, item) => {
       if (!acc[item.profile_id]) {
@@ -175,12 +230,23 @@ export const getProfiles = async (): Promise<Profile[]> => {
       return acc;
     }, {} as Record<string, MediaItem[]>);
 
+    // Agrupar likes por perfil
+    const likesByProfile = (likes || []).reduce((acc, like) => {
+      if (!acc[like.profile_id]) {
+        acc[like.profile_id] = [];
+      }
+      acc[like.profile_id].push(like as ProfileLike);
+      return acc;
+    }, {} as Record<string, ProfileLike[]>);
+
     // Convertir y combinar datos
     return profiles.map(profile => 
       convertDatabaseProfileToProfile(
         profile as DatabaseProfile,
         mediaByProfile[profile.id] || [],
-        profile.created_by_user
+        profile.created_by_user,
+        likesByProfile[profile.id] || [],
+        currentUserId
       )
     );
   } catch (error) {
@@ -379,19 +445,109 @@ export const deleteProfile = async (profileId: string): Promise<void> => {
   }
 };
 
-// Alternar favorito
-export const toggleFavorite = async (profileId: string, isFavorite: boolean): Promise<void> => {
+// Dar o quitar like a un perfil
+export const toggleLike = async (profileId: string, userId: string): Promise<{ isLiked: boolean; likesCount: number }> => {
   try {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_favorite: isFavorite })
-      .eq('id', profileId);
+    // Verificar si ya existe el like
+    const { data: existingLike, error: checkError } = await supabase
+      .from('profile_likes')
+      .select('id')
+      .eq('profile_id', profileId)
+      .eq('user_id', userId)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw new Error(`Error verificando like: ${checkError.message}`);
+    }
+
+    let isLiked: boolean;
+
+    if (existingLike) {
+      // Ya existe el like, eliminarlo
+      const { error: deleteError } = await supabase
+        .from('profile_likes')
+        .delete()
+        .eq('id', existingLike.id);
+
+      if (deleteError) {
+        throw new Error(`Error eliminando like: ${deleteError.message}`);
+      }
+      isLiked = false;
+    } else {
+      // No existe el like, crearlo
+      const { error: insertError } = await supabase
+        .from('profile_likes')
+        .insert([{
+          profile_id: profileId,
+          user_id: userId
+        }]);
+    }
+      if (insertError) {
+        throw new Error(`Error agregando like: ${insertError.message}`);
+      }
+      isLiked = true;
+    }
+
+    // Obtener el conteo actualizado de likes
+    const { data: likesData, error: countError } = await supabase
+      .from('profile_likes')
+      .select('id')
+      .eq('profile_id', profileId);
+
+    if (countError) {
+      throw new Error(`Error obteniendo conteo de likes: ${countError.message}`);
+    }
+
+    const likesCount = likesData?.length || 0;
+
+    return { isLiked, likesCount };
+  } catch (error) {
+    console.error('Error en toggleLike:', error);
+    throw error;
+  }
+};
+
+// Obtener likes de un perfil específico
+export const getProfileLikes = async (profileId: string): Promise<{ likesCount: number; likedByUsers: any[] }> => {
+  try {
+    const { data: likes, error } = await supabase
+      .from('profile_likes')
+      .select(`
+        *,
+        user:user_id(
+          id,
+          full_name,
+          username,
+          role,
+          is_active,
+          created_at,
+          updated_at
+        )
+      `)
+      .eq('profile_id', profileId)
+      .order('created_at', { ascending: false });
 
     if (error) {
-      throw new Error(`Error actualizando favorito: ${error.message}`);
+      throw new Error(`Error obteniendo likes del perfil: ${error.message}`);
     }
+
+    const likesCount = likes?.length || 0;
+    const likedByUsers = (likes || [])
+      .filter(like => like.user)
+      .map(like => ({
+        id: like.user.id,
+        fullName: like.user.full_name,
+        username: like.user.username,
+        role: like.user.role,
+        isActive: like.user.is_active,
+        createdAt: new Date(like.user.created_at),
+        updatedAt: new Date(like.user.updated_at),
+        likedAt: new Date(like.created_at)
+      }));
+
+    return { likesCount, likedByUsers };
   } catch (error) {
-    console.error('Error en toggleFavorite:', error);
+    console.error('Error en getProfileLikes:', error);
     throw error;
   }
 };

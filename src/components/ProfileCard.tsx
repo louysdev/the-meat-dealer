@@ -6,17 +6,17 @@ import { getTimeAgo, isNewProfile } from '../utils/dateUtils';
 interface ProfileCardProps {
   profile: Profile;
   onClick: () => void;
-  onToggleFavorite: (id: string) => void;
+  onToggleLike: (id: string) => void;
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({ 
   profile, 
   onClick, 
-  onToggleFavorite
+  onToggleLike
 }) => {
-  const handleFavoriteClick = (e: React.MouseEvent) => {
+  const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onToggleFavorite(profile.id);
+    onToggleLike(profile.id);
   };
 
   // Obtener el primer archivo de media (foto o video)
@@ -93,14 +93,28 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         {/* Favorite button */}
         <div className="absolute top-4 left-4" style={{ marginTop: totalMedia > 1 ? '2.5rem' : '0' }}>
           <button
-            onClick={handleFavoriteClick}
-            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
-              profile.isFavorite 
+            onClick={handleLikeClick}
+            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 relative group ${
+              profile.isLikedByCurrentUser 
                 ? 'bg-red-600/90 text-white' 
                 : 'bg-black/50 text-gray-300 hover:bg-red-600/70 hover:text-white'
             }`}
           >
-            <Heart className={`w-5 h-5 ${profile.isFavorite ? 'fill-current' : ''}`} />
+            <Heart className={`w-5 h-5 ${profile.isLikedByCurrentUser ? 'fill-current' : ''}`} />
+            
+            {/* Contador de likes */}
+            {profile.likesCount > 0 && (
+              <div className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-bold shadow-lg">
+                {profile.likesCount > 99 ? '99+' : profile.likesCount}
+              </div>
+            )}
+            
+            {/* Tooltip con información de likes */}
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              {profile.likesCount === 0 ? 'Sin me gusta' : 
+               profile.likesCount === 1 ? '1 me gusta' : 
+               `${profile.likesCount} me gusta`}
+            </div>
           </button>
         </div>
 

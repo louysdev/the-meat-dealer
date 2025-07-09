@@ -31,7 +31,9 @@ export interface Profile {
   placeTags: string[];
   
   // Metadata
-  isFavorite?: boolean;
+  likesCount: number; // Conteo total de likes
+  isLikedByCurrentUser: boolean; // Si el usuario actual le dio like
+  likedByUsers: User[]; // Lista de usuarios que dieron like
   isAvailable?: boolean;
   createdAt: Date;
   createdByUser?: User; // Usuario que creó el perfil

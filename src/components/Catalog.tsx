@@ -6,19 +6,19 @@ import { ProfileCard } from './ProfileCard';
 interface CatalogProps {
   profiles: Profile[];
   onProfileClick: (profile: Profile) => void;
-  onToggleFavorite: (id: string) => void;
+  onToggleLike: (id: string) => void;
 }
 
 export const Catalog: React.FC<CatalogProps> = ({ 
   profiles, 
   onProfileClick, 
-  onToggleFavorite
+  onToggleLike
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'age' | 'recent' | 'favorites'>('recent');
+  const [sortBy, setSortBy] = useState<'name' | 'age' | 'recent' | 'likes'>('recent');
   const [filterHeight, setFilterHeight] = useState<string>('all');
   const [filterBodySize, setFilterBodySize] = useState<string>('all');
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showLikedOnly, setShowLikedOnly] = useState(false);
   const [filterAvailability, setFilterAvailability] = useState<string>('all');
 
   // Filter and sort profiles
@@ -33,12 +33,12 @@ export const Catalog: React.FC<CatalogProps> = ({
 
       const matchesHeight = filterHeight === 'all' || profile.height === filterHeight;
       const matchesBodySize = filterBodySize === 'all' || profile.bodySize === filterBodySize;
-      const matchesFavorites = !showFavoritesOnly || profile.isFavorite;
+      const matchesLiked = !showLikedOnly || profile.isLikedByCurrentUser;
       const matchesAvailability = filterAvailability === 'all' || 
         (filterAvailability === 'available' && profile.isAvailable !== false) ||
         (filterAvailability === 'unavailable' && profile.isAvailable === false);
 
-      return matchesSearch && matchesHeight && matchesBodySize && matchesFavorites && matchesAvailability;
+      return matchesSearch && matchesHeight && matchesBodySize && matchesLiked && matchesAvailability;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -46,9 +46,12 @@ export const Catalog: React.FC<CatalogProps> = ({
           return a.firstName.localeCompare(b.firstName);
         case 'age':
           return a.age - b.age;
-        case 'favorites':
-          if (a.isFavorite && !b.isFavorite) return -1;
-          if (!a.isFavorite && b.isFavorite) return 1;
+        case 'likes':
+          // Ordenar por número de likes (descendente)
+          if (a.likesCount !== b.likesCount) {
+            return b.likesCount - a.likesCount;
+          }
+          // Si tienen el mismo número de likes, ordenar por fecha
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         case 'recent':
         default:
@@ -56,7 +59,8 @@ export const Catalog: React.FC<CatalogProps> = ({
       }
     });
 
-  const favoriteCount = profiles.filter(p => p.isFavorite).length;
+  const likedCount = profiles.filter(p => p.isLikedByCurrentUser).length;
+  const totalLikes = profiles.reduce((sum, p) => sum + p.likesCount, 0);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -66,7 +70,7 @@ export const Catalog: React.FC<CatalogProps> = ({
           Catálogo de Perfiles
         </h1>
         <p className="text-gray-400">
-          Descubre {profiles.length} perfiles únicos • {favoriteCount} favoritos
+          Descubre {profiles.length} perfiles únicos • {totalLikes} me gusta totales • {likedCount} que te gustan
         </p>
       </div>
 
@@ -95,7 +99,7 @@ export const Catalog: React.FC<CatalogProps> = ({
               <option value="recent">Más recientes</option>
               <option value="name">Por nombre</option>
               <option value="age">Por edad</option>
-              <option value="favorites">Favoritos primero</option>
+              <option value="likes">Más populares</option>
             </select>
           </div>
 
@@ -133,15 +137,15 @@ export const Catalog: React.FC<CatalogProps> = ({
           {/* Favorites Toggle */}
           <div>
             <button
-              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              onClick={() => setShowLikedOnly(!showLikedOnly)}
               className={`w-full px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 ${
-                showFavoritesOnly
+                showLikedOnly
                   ? 'bg-red-600 text-white'
                   : 'bg-gray-800 border border-gray-700 text-gray-300 hover:bg-red-600/20'
               }`}
             >
-              <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-              <span>Solo favoritos</span>
+              <Heart className={`w-4 h-4 ${showLikedOnly ? 'fill-current' : ''}`} />
+              <span>Solo me gusta</span>
             </button>
           </div>
 
@@ -162,7 +166,7 @@ export const Catalog: React.FC<CatalogProps> = ({
         {/* Results count */}
         <div className="text-gray-400 text-sm">
           Mostrando {filteredProfiles.length} de {profiles.length} perfiles
-          {showFavoritesOnly && ` (${favoriteCount} favoritos)`}
+          {showLikedOnly && ` (${likedCount} que te gustan)`}
           {filterAvailability === 'available' && ` (disponibles)`}
           {filterAvailability === 'unavailable' && ` (no disponibles)`}
         </div>
@@ -176,7 +180,7 @@ export const Catalog: React.FC<CatalogProps> = ({
             No se encontraron perfiles
           </h3>
           <p className="text-gray-500">
-            {searchTerm || filterHeight !== 'all' || filterBodySize !== 'all' || showFavoritesOnly
+            {searchTerm || filterHeight !== 'all' || filterBodySize !== 'all' || showLikedOnly
               ? 'Intenta ajustar tus filtros de búsqueda'
               : 'Aún no hay perfiles en el catálogo'}
           </p>
@@ -190,7 +194,7 @@ export const Catalog: React.FC<CatalogProps> = ({
             key={profile.id}
             profile={profile}
             onClick={() => onProfileClick(profile)}
-            onToggleFavorite={onToggleFavorite}
+            onToggleLike={onToggleLike}
           />
         ))}
       </div>

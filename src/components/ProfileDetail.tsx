@@ -14,7 +14,9 @@ import {
   Grid3X3,
   Edit,
   Trash2,
-  Clock
+  Clock,
+  Users,
+  ThumbsUp
 } from 'lucide-react';
 import { Profile } from '../types';
 import { MediaSlider } from './MediaSlider';
@@ -209,7 +211,14 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
 
               {/* Media count and creation date */}
               <div className="flex items-center justify-between mb-4 text-gray-400 text-sm">
-                <span>{profile.photos.length} fotos • {profile.videos.length} videos</span>
+                <div className="flex items-center space-x-4">
+                  <span>{profile.photos.length} fotos • {profile.videos.length} videos</span>
+                  <div className="flex items-center space-x-1 text-red-400">
+                    <Heart className="w-4 h-4 fill-current" />
+                    <span className="font-medium">{profile.likesCount}</span>
+                    <span>me gusta</span>
+                  </div>
+                </div>
                 <div className="flex items-center space-x-4">
                   {profile.createdByUser && (
                     <div className="flex items-center space-x-1">
