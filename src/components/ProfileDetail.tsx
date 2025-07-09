@@ -19,26 +19,43 @@ import {
   ThumbsUp,
   Camera,
 } from "lucide-react";
-import { Profile } from "../types";
+import { Profile, User as UserType } from "../types";
 import { MediaSlider } from "./MediaSlider";
 import { ShareButton } from "./ShareButton";
 import { getTimeAgo } from "../utils/dateUtils";
 
 interface ProfileDetailProps {
   profile: Profile;
+  currentUser: UserType | null;
   onBack: () => void;
   onEdit?: (profile: Profile) => void;
   onDelete?: (profile: Profile) => void;
+  blurImages?: boolean;
 }
 
 export const ProfileDetail: React.FC<ProfileDetailProps> = ({
   profile,
+  currentUser,
   onBack,
   onEdit,
   onDelete,
+  blurImages = false,
 }) => {
   const [showFullscreenSlider, setShowFullscreenSlider] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+
+  // Verificar permisos de edición/eliminación
+  const canEdit = () => {
+    if (!currentUser) return false;
+    
+    // Los administradores pueden editar cualquier perfil
+    if (currentUser.role === 'admin') return true;
+    
+    // Los usuarios solo pueden editar perfiles que ellos crearon
+    if (profile.createdByUser && profile.createdByUser.id === currentUser.id) return true;
+    
+    return false;
+  };
 
   // Combinar fotos y videos en un solo array de media
   const allMedia = [
@@ -92,7 +109,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                   residence: profile.residence,
                 }}
               />
-              {onEdit && (
+              {onEdit && canEdit() && (
                 <button
                   onClick={handleEditClick}
                   className="p-3 bg-black/80 hover:bg-black/90 backdrop-blur-sm border border-gray-600 hover:border-gray-500 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 group"
@@ -101,7 +118,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                   <Edit className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" />
                 </button>
               )}
-              {onDelete && (
+              {onDelete && canEdit() && (
                 <button
                   onClick={handleDeleteClick}
                   className="p-3 bg-black/80 hover:bg-black/90 backdrop-blur-sm border border-gray-600 hover:border-red-500 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 group"
@@ -122,13 +139,13 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
             {/* Main media on mobile, hidden on desktop */}
             <div className="lg:hidden">
               <div className="aspect-[2/3] rounded-2xl overflow-hidden">
-                <MediaSlider media={allMedia} autoPlay={false} />
+                <MediaSlider media={allMedia} autoPlay={false} blurImages={blurImages} />
               </div>
             </div>
 
             {/* Auto-sliding media on desktop */}
             <div className="hidden lg:block h-[600px] rounded-2xl overflow-hidden">
-              <MediaSlider media={allMedia} autoPlay={true} interval={4000} />
+              <MediaSlider media={allMedia} autoPlay={true} interval={4000} blurImages={blurImages} />
             </div>
           </div>
 
@@ -464,6 +481,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
           media={allMedia}
           onClose={() => setShowFullscreenSlider(false)}
           fullscreen={true}
+          blurImages={blurImages}
         />
       )}
     </div>

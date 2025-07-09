@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Filter, Heart, X, ChevronDown, Eraser } from "lucide-react";
+import { Search, Filter, Heart, X, ChevronDown, Eraser, Eye, EyeOff } from "lucide-react";
 import { Profile } from "../types";
 import { ProfileCard } from "./ProfileCard";
 
@@ -7,12 +7,16 @@ interface CatalogProps {
   profiles: Profile[];
   onProfileClick: (profile: Profile) => void;
   onToggleLike: (id: string) => void;
+  blurImages: boolean;
+  onToggleBlurImages: (blur: boolean) => void;
 }
 
 export const Catalog: React.FC<CatalogProps> = ({
   profiles,
   onProfileClick,
   onToggleLike,
+  blurImages,
+  onToggleBlurImages,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "age" | "recent" | "likes">(
@@ -161,6 +165,23 @@ export const Catalog: React.FC<CatalogProps> = ({
               />
             </button>
 
+            {/* Blur Images Toggle */}
+            <button
+              onClick={() => onToggleBlurImages(!blurImages)}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                blurImages
+                  ? "bg-gray-600 text-white shadow-lg"
+                  : "bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50"
+              }`}
+              title={blurImages ? "Mostrar imágenes" : "Ocultar imágenes"}
+            >
+              {blurImages ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
+
             {/* Clear Filters */}
             {(hasActiveFilters || showLikedOnly) && (
               <button
@@ -269,8 +290,7 @@ export const Catalog: React.FC<CatalogProps> = ({
       {/* Results count - moved to bottom */}
       <div className="mb-6 text-center">
         <div className="text-gray-400 text-sm">
-          Mostrando {filteredProfiles.length} de {profiles.length} perfiles •{" "}
-          {totalLikes} me gusta totales
+          Mostrando {filteredProfiles.length} de {profiles.length} perfiles
         </div>
       </div>
 
@@ -282,6 +302,7 @@ export const Catalog: React.FC<CatalogProps> = ({
             profile={profile}
             onClick={() => onProfileClick(profile)}
             onToggleLike={onToggleLike}
+            blurImages={blurImages}
           />
         ))}
       </div>

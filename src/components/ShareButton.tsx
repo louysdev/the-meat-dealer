@@ -35,7 +35,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
   };
 
   const handleNativeShare = async () => {
-    if (navigator.share) {
+    if (navigator.share && 'share' in navigator) {
       try {
         await navigator.share({
           title: shareTitle,
@@ -100,7 +100,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
               </button>
 
               {/* Compartir nativo (móviles) */}
-              {navigator.share && (
+              {('share' in navigator) && (
                 <button
                   onClick={handleNativeShare}
                   className="w-full flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"

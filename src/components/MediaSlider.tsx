@@ -12,6 +12,7 @@ interface MediaSliderProps {
   interval?: number;
   onClose?: () => void;
   fullscreen?: boolean;
+  blurImages?: boolean;
 }
 
 export const MediaSlider: React.FC<MediaSliderProps> = ({
@@ -19,7 +20,8 @@ export const MediaSlider: React.FC<MediaSliderProps> = ({
   autoPlay = false,
   interval = 4000,
   onClose,
-  fullscreen = false
+  fullscreen = false,
+  blurImages = false
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -96,14 +98,18 @@ export const MediaSlider: React.FC<MediaSliderProps> = ({
           <img
             src={currentMedia.url}
             alt={`Imagen ${currentIndex + 1}`}
-            className={`${fullscreen ? 'max-w-4xl max-h-[90vh]' : 'w-full h-full'} object-cover rounded-lg`}
+            className={`${fullscreen ? 'max-w-4xl max-h-[90vh]' : 'w-full h-full'} object-cover rounded-lg ${
+              blurImages ? 'blur-xl' : ''
+            }`}
           />
         ) : (
           <div className="relative">
             <video
               ref={setVideoRef}
               src={currentMedia.url}
-              className={`${fullscreen ? 'max-w-4xl max-h-[90vh]' : 'w-full h-full'} object-cover rounded-lg`}
+              className={`${fullscreen ? 'max-w-4xl max-h-[90vh]' : 'w-full h-full'} object-cover rounded-lg ${
+                blurImages ? 'blur-xl' : ''
+              }`}
               muted={isVideoMuted}
               onPlay={() => setIsVideoPlaying(true)}
               onPause={() => setIsVideoPlaying(false)}

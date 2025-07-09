@@ -34,6 +34,7 @@ function App() {
 
   const [currentView, setCurrentView] = useState<View>('catalog');
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [blurImages, setBlurImages] = useState(false);
 
   // Manejar URLs compartidas
   React.useEffect(() => {
@@ -219,6 +220,8 @@ function App() {
               profiles={profiles}
               onProfileClick={handleProfileClick}
               onToggleLike={handleToggleLike}
+              blurImages={blurImages}
+              onToggleBlurImages={setBlurImages}
             />
           )}
 
@@ -232,6 +235,7 @@ function App() {
           {currentView === 'edit' && selectedProfile && (
             <EditProfileForm 
               profile={selectedProfile}
+              currentUser={currentUser}
               onSubmit={handleEditProfile}
               onCancel={handleBackToCatalog}
             />
@@ -240,20 +244,24 @@ function App() {
           {currentView === 'detail' && selectedProfile && (
             <ProfileDetail 
               profile={selectedProfile}
+              currentUser={currentUser}
               onBack={handleBackToCatalog}
               onEdit={handleEditClick}
               onDelete={handleDeleteProfile}
+              blurImages={blurImages}
             />
           )}
 
           {currentView === 'shared-profile' && selectedProfile && (
             <ProfileDetail 
               profile={selectedProfile}
+              currentUser={currentUser}
               onBack={() => {
                 window.history.pushState({}, '', '/');
                 setCurrentView('catalog');
                 setSelectedProfile(null);
               }}
+              blurImages={blurImages}
             />
           )}
         </main>

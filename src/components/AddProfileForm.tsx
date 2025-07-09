@@ -293,7 +293,7 @@ export const AddProfileForm: React.FC<AddProfileFormProps> = ({
               <h3 className="text-lg font-semibold">Características Físicas</h3>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Altura

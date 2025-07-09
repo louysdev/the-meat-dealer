@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Heart, Save, X } from 'lucide-react';
-import { Profile } from '../types';
+import { Heart, Save, X, CircleUser, DollarSign, User, Home, Instagram, Smile, Flag, Shield } from 'lucide-react';
+import { Profile, User as UserType } from '../types';
 import { MediaUpload } from './MediaUpload';
 import { TagInput } from './TagInput';
 
@@ -11,11 +11,48 @@ interface MediaItem {
 
 interface EditProfileFormProps {
   profile: Profile;
+  currentUser: UserType | null;
   onSubmit: (profile: Profile) => void;
   onCancel: () => void;
 }
 
-export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSubmit, onCancel }) => {
+export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, currentUser, onSubmit, onCancel }) => {
+  // Verificar permisos de edición
+  const canEdit = () => {
+    if (!currentUser) return false;
+    
+    // Los administradores pueden editar cualquier perfil
+    if (currentUser.role === 'admin') return true;
+    
+    // Los usuarios solo pueden editar perfiles que ellos crearon
+    if (profile.createdByUser && profile.createdByUser.id === currentUser.id) return true;
+    
+    return false;
+  };
+
+  // Si no tiene permisos, mostrar mensaje de error
+  if (!canEdit()) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
+          <div className="text-center py-16">
+            <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-4">Acceso Denegado</h2>
+            <p className="text-gray-400 mb-6">
+              No tienes permisos para editar este perfil. Solo el creador del perfil y los administradores pueden editarlo.
+            </p>
+            <button
+              onClick={onCancel}
+              className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+            >
+              Volver
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Combinar fotos y videos en un solo array de media
   const initialMedia: MediaItem[] = [
     ...profile.photos.map(url => ({ url, type: 'photo' as const })),
@@ -135,9 +172,10 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
 
           {/* Información básica */}
           <div className="bg-gray-800/50 rounded-xl p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
-              Información Básica
-            </h3>
+            <div className="flex items-center space-x-3 mb-4 *:text-red-300 border-b border-red-800 pb-2">
+              <CircleUser className="w-5 h-5" />
+              <h3 className="text-lg font-semibold">Información Básica</h3>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -182,9 +220,10 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
 
           {/* Situación económica */}
           <div className="bg-gray-800/50 rounded-xl p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
-              Situación Económica
-            </h3>
+            <div className="flex items-center space-x-3 mb-4 *:text-red-300 border-b border-red-800 pb-2">
+              <DollarSign className="w-5 h-5" />
+              <h3 className="text-lg font-semibold">Situación Económica</h3>
+            </div>
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -225,10 +264,11 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
 
           {/* Características físicas */}
           <div className="bg-gray-800/50 rounded-xl p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
-              Características Físicas
-            </h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="flex items-center space-x-3 mb-4 *:text-red-300 border-b border-red-800 pb-2">
+              <User className="w-5 h-5" />
+              <h3 className="text-lg font-semibold">Características Físicas</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Altura
@@ -296,9 +336,10 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
 
           {/* Ubicación */}
           <div className="bg-gray-800/50 rounded-xl p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
-              Ubicación
-            </h3>
+            <div className="flex items-center space-x-3 mb-4 *:text-red-300 border-b border-red-800 pb-2">
+              <Home className="w-5 h-5" />
+              <h3 className="text-lg font-semibold">Ubicación</h3>
+            </div>
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -341,9 +382,10 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
 
           {/* Redes sociales */}
           <div className="bg-gray-800/50 rounded-xl p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
-              Redes Sociales
-            </h3>
+            <div className="flex items-center space-x-3 mb-4 *:text-red-300 border-b border-red-800 pb-2">
+              <Instagram className="w-5 h-5" />
+              <h3 className="text-lg font-semibold">Redes Sociales</h3>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Instagram
@@ -360,9 +402,10 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
 
           {/* Gustos */}
           <div className="bg-gray-800/50 rounded-xl p-6 space-y-6">
-            <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
-              Gustos Personales *
-            </h3>
+            <div className="flex items-center space-x-3 mb-4 *:text-red-300 border-b border-red-800 pb-2">
+              <Smile className="w-5 h-5" />
+              <h3 className="text-lg font-semibold">Gustos Personales *</h3>
+            </div>
             <p className="text-gray-400 text-sm">
               * Se requiere agregar al menos un gusto personal (música o lugar favorito)
             </p>
@@ -382,9 +425,10 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
 
           {/* Estado de Disponibilidad */}
           <div className="bg-gray-800/50 rounded-xl p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-red-300 border-b border-red-800 pb-2">
-              Estado de Disponibilidad
-            </h3>
+            <div className="flex items-center space-x-3 mb-4 *:text-red-300 border-b border-red-800 pb-2">
+              <Flag className="w-5 h-5" />
+              <h3 className="text-lg font-semibold">Estado de Disponibilidad</h3>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label className="flex items-center justify-center space-x-3 cursor-pointer bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-green-500 transition-colors group">
                 <input

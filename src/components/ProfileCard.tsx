@@ -7,12 +7,14 @@ interface ProfileCardProps {
   profile: Profile;
   onClick: () => void;
   onToggleLike: (id: string) => void;
+  blurImages?: boolean;
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({ 
   profile, 
   onClick, 
-  onToggleLike
+  onToggleLike,
+  blurImages = false
 }) => {
   const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -43,13 +45,17 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               <img
                 src={firstMedia.url}
                 alt={`${profile.firstName} ${profile.lastName}`}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${
+                  blurImages ? 'blur-xl' : ''
+                }`}
               />
             ) : (
               <div className="relative w-full h-full">
                 <video
                   src={firstMedia.url}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${
+                    blurImages ? 'blur-xl' : ''
+                  }`}
                   muted
                   preload="metadata"
                 />
