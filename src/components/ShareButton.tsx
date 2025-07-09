@@ -20,13 +20,18 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
 
   const shareUrl = `${window.location.origin}/profile/${profile.id}`;
   const shareTitle = `${profile.firstName} ${profile.lastName} - ${profile.age} años`;
-  const shareDescription = profile.residence 
-    ? `Perfil de ${profile.firstName} de ${profile.residence}` 
-    : `Perfil de ${profile.firstName}`;
+
+  // Crear mensaje mejorado para todas las plataformas
+  const createShareMessage = () => {
+    return `🔥 *${shareTitle}* 🔥\n\n` +
+      `📍 ${profile.residence || 'Ubicación no especificada'}\n\n` +
+      `👀 Ver perfil completo: ${shareUrl}`;
+  };
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      const message = createShareMessage();
+      await navigator.clipboard.writeText(message);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
@@ -37,9 +42,10 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
   const handleNativeShare = async () => {
     if (navigator.share && 'share' in navigator) {
       try {
+        const message = createShareMessage();
         await navigator.share({
-          title: shareTitle,
-          text: shareDescription,
+          title: `🔥 ${shareTitle} 🔥`,
+          text: message,
           url: shareUrl,
         });
       } catch (error) {
@@ -49,18 +55,14 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
   };
 
   const handleWhatsAppShare = () => {
-    // Crear un mensaje más atractivo
-    const message = `🔥 *${shareTitle}* 🔥\n\n` +
-      `${shareDescription}\n\n` +
-      `📍 ${profile.residence || 'Ubicación no especificada'}\n\n` +
-      `👀 Ver perfil completo: ${shareUrl}`;
-    
+    const message = createShareMessage();
     const text = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
   const handleTelegramShare = () => {
-    const text = encodeURIComponent(`${shareTitle}\n${shareDescription}`);
+    const message = createShareMessage();
+    const text = encodeURIComponent(message);
     window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${text}`, '_blank');
   };
 
@@ -101,7 +103,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
                   <Copy className="w-4 h-4" />
                 )}
                 <span className="text-sm">
-                  {copied ? 'Enlace copiado' : 'Copiar enlace'}
+                  {copied ? 'Mensaje copiado' : 'Copiar mensaje'}
                 </span>
               </button>
 
@@ -148,9 +150,12 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
               </button>
             </div>
 
-            {/* URL preview */}
+            {/* Message preview */}
             <div className="p-3 bg-gray-800/50 border-t border-gray-700">
-              <p className="text-gray-400 text-xs break-all">{shareUrl}</p>
+              <p className="text-gray-400 text-xs mb-2 font-medium">Vista previa del mensaje:</p>
+              <p className="text-gray-300 text-xs leading-relaxed whitespace-pre-line">
+                {createShareMessage()}
+              </p>
             </div>
           </div>
         </>
