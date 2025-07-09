@@ -37,7 +37,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     >
       {/* Media */}
       <div className="relative h-96 sm:h-72 md:h-80 overflow-hidden">
-        {firstMedia ? (
+        {firstMedia ?! (
           <>
             {firstMedia.type === 'photo' ? (
               <img

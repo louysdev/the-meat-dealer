@@ -142,13 +142,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                     {profile.firstName} {profile.lastName}
                   </h1>
                   <div className="flex items-center space-x-4 text-gray-300">
-                    {profile.createdByUser && (
-                      <div className="flex items-center space-x-1 *:text-gray-300">
-                        <User className="w-4 h-4" />
-                        <span>@{profile.createdByUser.username}</span>
-                      </div>
-                    )}
-
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
                       <span>{profile.age} años</span>
@@ -161,6 +154,29 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                     )}
                   </div>
                 </div>
+                <button
+                  className={`relative p-3 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                    profile.isLikedByCurrentUser
+                      ? "bg-red-600 text-white shadow-lg scale-110"
+                      : "bg-gray-800/50 text-gray-300 hover:bg-red-600/70 hover:text-white border border-gray-600 hover:border-red-500"
+                  }`}
+                  title={
+                    profile.isLikedByCurrentUser
+                      ? "Quitar me gusta"
+                      : "Me gusta"
+                  }
+                >
+                  <Heart
+                    className={`w-5 h-5 ${
+                      profile.isLikedByCurrentUser ? "fill-current" : ""
+                    }`}
+                  />
+                  {profile.likesCount > 0 && (
+                    <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-bold shadow-lg">
+                      {profile.likesCount > 99 ? "99+" : profile.likesCount}
+                    </div>
+                  )}
+                </button>
               </div>
 
               {/* Media count and creation date */}
@@ -171,10 +187,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                     {profile.photos.length} fotos • {profile.videos.length}{" "}
                     videos
                   </span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
-                  <span>Creado {timeAgo}</span>
                 </div>
               </div>
 
@@ -211,29 +223,19 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                     </span>
                   </div>
                 </div>
-                <button
-                  className={`relative p-3 rounded-full backdrop-blur-sm transition-all duration-300 ${
-                    profile.isLikedByCurrentUser
-                      ? "bg-red-600 text-white shadow-lg scale-110"
-                      : "bg-gray-800/50 text-gray-300 hover:bg-red-600/70 hover:text-white border border-gray-600 hover:border-red-500"
-                  }`}
-                  title={
-                    profile.isLikedByCurrentUser
-                      ? "Quitar me gusta"
-                      : "Me gusta"
-                  }
-                >
-                  <Heart
-                    className={`w-5 h-5 ${
-                      profile.isLikedByCurrentUser ? "fill-current" : ""
-                    }`}
-                  />
-                  {profile.likesCount > 0 && (
-                    <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-bold shadow-lg">
-                      {profile.likesCount > 99 ? "99+" : profile.likesCount}
-                    </div>
-                  )}
-                </button>
+              </div>
+
+              <div className="flex items-center space-x-4 mt-4 justify-between *:text-gray-400">
+                {profile.createdByUser && (
+                  <div className="flex items-center space-x-1">
+                    <User className="w-4 h-4" />
+                    <span>@{profile.createdByUser.username}</span>
+                  </div>
+                )}
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-4 h-4" />
+                  <span>Creado {timeAgo}</span>
+                </div>
               </div>
             </div>
 

@@ -415,21 +415,21 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({ profile, onSub
             </div>
           </div>
 
-          <div className="flex space-x-4">
+          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3"
+              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 sm:space-x-3"
             >
-              <X className="w-5 h-5" />
-              <span>Cancelar</span>
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base">Cancelar</span>
             </button>
             <button
               type="submit"
-              className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 sm:space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              <Save className="w-5 h-5" />
-              <span>Guardar Cambios</span>
+              <Save className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base">Guardar Cambios</span>
             </button>
           </div>
         </form>

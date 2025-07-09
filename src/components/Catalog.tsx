@@ -137,7 +137,6 @@ export const Catalog: React.FC<CatalogProps> = ({
               }`}
             >
               <Filter className="w-5 h-5" />
-              <span>Filtros</span>
               {hasActiveFilters && (
                 <div className="w-2 h-2 bg-white rounded-full"></div>
               )}
@@ -160,17 +159,15 @@ export const Catalog: React.FC<CatalogProps> = ({
               <Heart
                 className={`w-5 h-5 ${showLikedOnly ? "fill-current" : ""}`}
               />
-              <span>Solo me gusta</span>
             </button>
 
             {/* Clear Filters */}
             {(hasActiveFilters || showLikedOnly) && (
               <button
                 onClick={clearAllFilters}
-                className="flex items-center space-x-2 px-4 py-3 rounded-xl text-gray-400 hover:text-white transition-colors"
+                className="flex items-center space-x-2 px-4 py-3 rounded-xl text-gray-400 hover:text-white transition-colors bg-gray-400/20 hover:bg-gray-400/30"
               >
                 <Eraser className="w-4 h-4" />
-                <span>Limpiar</span>
               </button>
             )}
           </div>
@@ -266,14 +263,6 @@ export const Catalog: React.FC<CatalogProps> = ({
               ? "Intenta ajustar tus filtros de búsqueda"
               : "Aún no hay perfiles en el catálogo"}
           </p>
-          {(hasActiveFilters || showLikedOnly) && (
-            <button
-              onClick={clearAllFilters}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
-            >
-              Limpiar filtros
-            </button>
-          )}
         </div>
       )}
 
