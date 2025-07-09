@@ -69,18 +69,18 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         
         {/* Badges superiores */}
         <div className="absolute top-4 right-4 flex flex-col space-y-2">
+          {/* Age badge */}
+          <div className="bg-red-600/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
+            <Calendar className="w-3 h-3" />
+            <span>{profile.age} años</span>
+          </div>
+          
           {/* Badge NUEVO */}
           {isNew && (
             <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
               NUEVO
             </div>
           )}
-          
-          {/* Age badge */}
-          <div className="bg-red-600/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
-            <Calendar className="w-3 h-3" />
-            <span>{profile.age} años</span>
-          </div>
         </div>
         
         {/* Media count badge - solo si hay más de 1 archivo */}
