@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Heart, SortAsc, Star } from 'lucide-react';
+import { Search, Filter, Heart, X, ChevronDown } from 'lucide-react';
 import { Profile } from '../types';
 import { ProfileCard } from './ProfileCard';
 
@@ -20,6 +20,7 @@ export const Catalog: React.FC<CatalogProps> = ({
   const [filterBodySize, setFilterBodySize] = useState<string>('all');
   const [showLikedOnly, setShowLikedOnly] = useState(false);
   const [filterAvailability, setFilterAvailability] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   // Filter and sort profiles
   const filteredProfiles = profiles
@@ -62,6 +63,17 @@ export const Catalog: React.FC<CatalogProps> = ({
   const likedCount = profiles.filter(p => p.isLikedByCurrentUser).length;
   const totalLikes = profiles.reduce((sum, p) => sum + p.likesCount, 0);
 
+  // Verificar si hay filtros activos
+  const hasActiveFilters = filterHeight !== 'all' || filterBodySize !== 'all' || filterAvailability !== 'all' || sortBy !== 'recent';
+
+  const clearAllFilters = () => {
+    setFilterHeight('all');
+    setFilterBodySize('all');
+    setFilterAvailability('all');
+    setSortBy('recent');
+    setShowLikedOnly(false);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -74,102 +86,148 @@ export const Catalog: React.FC<CatalogProps> = ({
         </p>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-gray-800/50 rounded-xl p-6 mb-8 border border-gray-700">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar por nombre, ciudad, gustos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-            />
-          </div>
+      {/* Search Bar - Full Width */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Buscar por nombre, ciudad, gustos musicales, lugares favoritos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-gray-800/50 border border-gray-700 rounded-2xl pl-12 pr-4 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300 text-lg"
+          />
+        </div>
+      </div>
 
-          {/* Sort */}
-          <div>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="recent">Más recientes</option>
-              <option value="name">Por nombre</option>
-              <option value="age">Por edad</option>
-              <option value="likes">Más populares</option>
-            </select>
-          </div>
-
-          {/* Height Filter */}
-          <div>
-            <select
-              value={filterHeight}
-              onChange={(e) => setFilterHeight(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="all">Todas las alturas</option>
-              <option value="Pequeña">Pequeña</option>
-              <option value="Mediana">Mediana</option>
-              <option value="Alta">Alta</option>
-            </select>
-          </div>
-
-          {/* Body Size Filter */}
-          <div>
-            <select
-              value={filterBodySize}
-              onChange={(e) => setFilterBodySize(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="all">Todos los tamaños</option>
-              <option value="S">S</option>
-              <option value="M">M</option>
-              <option value="L">L</option>
-              <option value="XL">XL</option>
-              <option value="XXL">XXL</option>
-              <option value="XXXL">XXXL</option>
-            </select>
-          </div>
-
-          {/* Favorites Toggle */}
-          <div>
+      {/* Filter Controls */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-4">
+            {/* Filters Button */}
             <button
-              onClick={() => setShowLikedOnly(!showLikedOnly)}
-              className={`w-full px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 ${
-                showLikedOnly
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-800 border border-gray-700 text-gray-300 hover:bg-red-600/20'
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                showFilters || hasActiveFilters
+                  ? 'bg-red-600 text-white shadow-lg'
+                  : 'bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50'
               }`}
             >
-              <Heart className={`w-4 h-4 ${showLikedOnly ? 'fill-current' : ''}`} />
+              <Filter className="w-5 h-5" />
+              <span>Filtros</span>
+              {hasActiveFilters && (
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+              )}
+              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Liked Only Toggle */}
+            <button
+              onClick={() => setShowLikedOnly(!showLikedOnly)}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                showLikedOnly
+                  ? 'bg-red-600 text-white shadow-lg'
+                  : 'bg-gray-800/50 border border-gray-700 text-gray-300 hover:bg-gray-700/50'
+              }`}
+            >
+              <Heart className={`w-5 h-5 ${showLikedOnly ? 'fill-current' : ''}`} />
               <span>Solo me gusta</span>
             </button>
+
+            {/* Clear Filters */}
+            {(hasActiveFilters || showLikedOnly) && (
+              <button
+                onClick={clearAllFilters}
+                className="flex items-center space-x-2 px-4 py-3 rounded-xl text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+                <span>Limpiar</span>
+              </button>
+            )}
           </div>
 
-          {/* Availability Filter */}
-          <div>
-            <select
-              value={filterAvailability}
-              onChange={(e) => setFilterAvailability(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="all">Todas las disponibilidades</option>
-              <option value="available">😏 Disponibles</option>
-              <option value="unavailable">😔 No disponibles</option>
-            </select>
+          {/* Results count */}
+          <div className="text-gray-400 text-sm">
+            Mostrando {filteredProfiles.length} de {profiles.length} perfiles
           </div>
         </div>
 
-        {/* Results count */}
-        <div className="text-gray-400 text-sm">
-          Mostrando {filteredProfiles.length} de {profiles.length} perfiles
-          {showLikedOnly && ` (${likedCount} que te gustan)`}
-          {filterAvailability === 'available' && ` (disponibles)`}
-          {filterAvailability === 'unavailable' && ` (no disponibles)`}
-        </div>
+        {/* Expanded Filters */}
+        {showFilters && (
+          <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 animate-in slide-in-from-top-2 duration-300">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Sort */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Ordenar por
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="recent">Más recientes</option>
+                  <option value="name">Por nombre</option>
+                  <option value="age">Por edad</option>
+                  <option value="likes">Más populares</option>
+                </select>
+              </div>
+
+              {/* Height Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Altura
+                </label>
+                <select
+                  value={filterHeight}
+                  onChange={(e) => setFilterHeight(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="all">Todas las alturas</option>
+                  <option value="Pequeña">Pequeña</option>
+                  <option value="Mediana">Mediana</option>
+                  <option value="Alta">Alta</option>
+                </select>
+              </div>
+
+              {/* Body Size Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Tamaño del cuerpo
+                </label>
+                <select
+                  value={filterBodySize}
+                  onChange={(e) => setFilterBodySize(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="all">Todos los tamaños</option>
+                  <option value="S">S</option>
+                  <option value="M">M</option>
+                  <option value="L">L</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                  <option value="XXXL">XXXL</option>
+                </select>
+              </div>
+
+              {/* Availability Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Disponibilidad
+                </label>
+                <select
+                  value={filterAvailability}
+                  onChange={(e) => setFilterAvailability(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="all">Todas las disponibilidades</option>
+                  <option value="available">😏 Disponibles</option>
+                  <option value="unavailable">😔 No disponibles</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Empty state */}
@@ -179,11 +237,19 @@ export const Catalog: React.FC<CatalogProps> = ({
           <h3 className="text-xl font-semibold text-gray-400 mb-2">
             No se encontraron perfiles
           </h3>
-          <p className="text-gray-500">
-            {searchTerm || filterHeight !== 'all' || filterBodySize !== 'all' || showLikedOnly
+          <p className="text-gray-500 mb-4">
+            {searchTerm || hasActiveFilters || showLikedOnly
               ? 'Intenta ajustar tus filtros de búsqueda'
               : 'Aún no hay perfiles en el catálogo'}
           </p>
+          {(hasActiveFilters || showLikedOnly) && (
+            <button
+              onClick={clearAllFilters}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              Limpiar filtros
+            </button>
+          )}
         </div>
       )}
 
