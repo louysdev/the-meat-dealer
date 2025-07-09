@@ -49,7 +49,13 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ profile, className = '
   };
 
   const handleWhatsAppShare = () => {
-    const text = encodeURIComponent(`${shareTitle}\n${shareDescription}\n${shareUrl}`);
+    // Crear un mensaje más atractivo
+    const message = `🔥 *${shareTitle}* 🔥\n\n` +
+      `${shareDescription}\n\n` +
+      `📍 ${profile.residence || 'Ubicación no especificada'}\n\n` +
+      `👀 Ver perfil completo: ${shareUrl}`;
+    
+    const text = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 

@@ -15,6 +15,14 @@ import { useProfiles } from './hooks/useProfiles';
 import { useModal } from './hooks/useModal';
 import { useAuth } from './hooks/useAuth';
 
+// Declaraciones de tipo para las funciones de window
+declare global {
+  interface Window {
+    updateMetaTags?: (profile: Profile) => void;
+    resetMetaTags?: () => void;
+  }
+}
+
 type View = 'catalog' | 'add' | 'detail' | 'edit' | 'shared-profile' | 'user-management';
 
 function App() {
@@ -174,6 +182,11 @@ function App() {
   const handleBackToCatalog = () => {
     setCurrentView('catalog');
     setSelectedProfile(null);
+    
+    // Restablecer meta tags al estado original
+    if (window.resetMetaTags) {
+      window.resetMetaTags();
+    }
   };
 
   const handleUserManagement = () => {

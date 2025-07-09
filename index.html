@@ -11,20 +11,20 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://lively-baklava-7cc15c.netlify.app/">
+    <meta property="og:url" content="https://the-meat-dealer.netlify.app/">
     <meta property="og:title" content="The Meat Dealer - Catálogo de Mujeres">
     <meta property="og:description" content="Catálogo de mujeres exclusivas con diseño elegante y sofisticado">
-    <meta property="og:image" content="https://lively-baklava-7cc15c.netlify.app/banner.jpeg">
+    <meta property="og:image" content="https://the-meat-dealer.netlify.app/banner.jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:type" content="image/jpeg">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://lively-baklava-7cc15c.netlify.app/">
+    <meta property="twitter:url" content="https://the-meat-dealer.netlify.app/">
     <meta property="twitter:title" content="The Meat Dealer - Catálogo de Mujeres">
     <meta property="twitter:description" content="Catálogo de mujeres exclusivas con diseño elegante y sofisticado">
-    <meta property="twitter:image" content="https://lively-baklava-7cc15c.netlify.app/banner.jpeg">
+    <meta property="twitter:image" content="https://the-meat-dealer.netlify.app/banner.jpeg">
   </head>
   <body>
     <div id="root"></div>
@@ -38,19 +38,76 @@
         const description = profile.residence 
           ? `Perfil de ${profile.firstName} de ${profile.residence}` 
           : `Perfil de ${profile.firstName}`;
-        const image = profile.photos[0] || profile.videos[0] || 'https://lively-baklava-7cc15c.netlify.app/banner.jpeg';
+        const image = profile.photos && profile.photos.length > 0 
+          ? profile.photos[0] 
+          : (profile.videos && profile.videos.length > 0 
+            ? profile.videos[0] 
+            : 'https://the-meat-dealer.netlify.app/banner.jpeg');
         
         // Actualizar título
         document.title = title;
         
         // Actualizar meta tags
-        document.querySelector('meta[name="description"]').setAttribute('content', description);
-        document.querySelector('meta[property="og:title"]').setAttribute('content', title);
-        document.querySelector('meta[property="og:description"]').setAttribute('content', description);
-        document.querySelector('meta[property="og:image"]').setAttribute('content', image);
-        document.querySelector('meta[property="twitter:title"]').setAttribute('content', title);
-        document.querySelector('meta[property="twitter:description"]').setAttribute('content', description);
-        document.querySelector('meta[property="twitter:image"]').setAttribute('content', image);
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) metaDescription.setAttribute('content', description);
+        
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) ogTitle.setAttribute('content', title);
+        
+        const ogDescription = document.querySelector('meta[property="og:description"]');
+        if (ogDescription) ogDescription.setAttribute('content', description);
+        
+        const ogImage = document.querySelector('meta[property="og:image"]');
+        if (ogImage) ogImage.setAttribute('content', image);
+        
+        const twitterTitle = document.querySelector('meta[property="twitter:title"]');
+        if (twitterTitle) twitterTitle.setAttribute('content', title);
+        
+        const twitterDescription = document.querySelector('meta[property="twitter:description"]');
+        if (twitterDescription) twitterDescription.setAttribute('content', description);
+        
+        const twitterImage = document.querySelector('meta[property="twitter:image"]');
+        if (twitterImage) twitterImage.setAttribute('content', image);
+        
+        // Actualizar URL canónica
+        const canonicalUrl = `https://the-meat-dealer.netlify.app/profile/${profile.id}`;
+        const ogUrl = document.querySelector('meta[property="og:url"]');
+        if (ogUrl) ogUrl.setAttribute('content', canonicalUrl);
+        
+        const twitterUrl = document.querySelector('meta[property="twitter:url"]');
+        if (twitterUrl) twitterUrl.setAttribute('content', canonicalUrl);
+      };
+      
+      // Función para restablecer meta tags al estado original
+      window.resetMetaTags = function() {
+        document.title = 'The Meat Dealer - Catálogo de Mujeres';
+        
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) metaDescription.setAttribute('content', 'Catálogo de mujeres exclusivas con diseño elegante y sofisticado');
+        
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) ogTitle.setAttribute('content', 'The Meat Dealer - Catálogo de Mujeres');
+        
+        const ogDescription = document.querySelector('meta[property="og:description"]');
+        if (ogDescription) ogDescription.setAttribute('content', 'Catálogo de mujeres exclusivas con diseño elegante y sofisticado');
+        
+        const ogImage = document.querySelector('meta[property="og:image"]');
+        if (ogImage) ogImage.setAttribute('content', 'https://the-meat-dealer.netlify.app/banner.jpeg');
+        
+        const twitterTitle = document.querySelector('meta[property="twitter:title"]');
+        if (twitterTitle) twitterTitle.setAttribute('content', 'The Meat Dealer - Catálogo de Mujeres');
+        
+        const twitterDescription = document.querySelector('meta[property="twitter:description"]');
+        if (twitterDescription) twitterDescription.setAttribute('content', 'Catálogo de mujeres exclusivas con diseño elegante y sofisticado');
+        
+        const twitterImage = document.querySelector('meta[property="twitter:image"]');
+        if (twitterImage) twitterImage.setAttribute('content', 'https://the-meat-dealer.netlify.app/banner.jpeg');
+        
+        const ogUrl = document.querySelector('meta[property="og:url"]');
+        if (ogUrl) ogUrl.setAttribute('content', 'https://the-meat-dealer.netlify.app/');
+        
+        const twitterUrl = document.querySelector('meta[property="twitter:url"]');
+        if (twitterUrl) twitterUrl.setAttribute('content', 'https://the-meat-dealer.netlify.app/');
       };
     </script>
   </body>
