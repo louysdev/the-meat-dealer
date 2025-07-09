@@ -84,17 +84,12 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         </div>
         
         {/* Media count badge - solo si hay más de 1 archivo */}
-        {totalMedia > 1 && (
-          <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium">
-            +{totalMedia - 1}
-          </div>
-        )}
         
         {/* Favorite button */}
-        <div className="absolute top-4 left-4" style={{ marginTop: totalMedia > 1 ? '2.5rem' : '0' }}>
+        <div className="absolute top-4 left-4">
           <button
             onClick={handleLikeClick}
-            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 relative group ${
+            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 relative ${
               profile.isLikedByCurrentUser 
                 ? 'bg-red-600/90 text-white' 
                 : 'bg-black/50 text-gray-300 hover:bg-red-600/70 hover:text-white'
@@ -108,13 +103,6 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                 {profile.likesCount > 99 ? '99+' : profile.likesCount}
               </div>
             )}
-            
-            {/* Tooltip con información de likes */}
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              {profile.likesCount === 0 ? 'Sin me gusta' : 
-               profile.likesCount === 1 ? '1 me gusta' : 
-               `${profile.likesCount} me gusta`}
-            </div>
           </button>
         </div>
 
@@ -180,13 +168,16 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               </div>
               
               {/* Badge de Disponibilidad */}
-              <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+              <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${
                 profile.isAvailable !== false
                   ? 'bg-green-600/20 text-green-300 border border-green-600/30'
                   : 'bg-red-600/20 text-red-300 border border-red-600/30'
               }`}>
                 <span className="text-sm">
                   {profile.isAvailable !== false ? '😏' : '😔'}
+                </span>
+                <span>
+                  {profile.isAvailable !== false ? 'Disponible' : 'No disponible'}
                 </span>
               </div>
             </div>
@@ -199,13 +190,16 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                 Creado por: <span className="text-blue-300">@{profile.createdByUser.username}</span>
               </div>
               {!profile.instagram && (
-                <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+                <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${
                   profile.isAvailable !== false
                     ? 'bg-green-600/20 text-green-300 border border-green-600/30'
                     : 'bg-red-600/20 text-red-300 border border-red-600/30'
                 }`}>
                   <span className="text-sm">
                     {profile.isAvailable !== false ? '😏' : '😔'}
+                  </span>
+                  <span>
+                    {profile.isAvailable !== false ? 'Disponible' : 'No disponible'}
                   </span>
                 </div>
               )}
@@ -215,13 +209,16 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           {/* Si no hay Instagram ni usuario creador, mostrar solo disponibilidad */}
           {!profile.instagram && !profile.createdByUser && (
             <div className="flex justify-end">
-              <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+              <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${
                 profile.isAvailable !== false
                   ? 'bg-green-600/20 text-green-300 border border-green-600/30'
                   : 'bg-red-600/20 text-red-300 border border-red-600/30'
               }`}>
                 <span className="text-sm">
                   {profile.isAvailable !== false ? '😏' : '😔'}
+                </span>
+                <span>
+                  {profile.isAvailable !== false ? 'Disponible' : 'No disponible'}
                 </span>
               </div>
             </div>
