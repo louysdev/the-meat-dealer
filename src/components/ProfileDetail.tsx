@@ -51,8 +51,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
     setShowFullscreenSlider(true);
   };
 
-
-
   const handleEditClick = () => {
     if (onEdit) {
       onEdit(profile);
@@ -163,21 +161,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                     )}
                   </div>
                 </div>
-                <button
-                  className={`relative p-3 rounded-full backdrop-blur-sm transition-all duration-300 ${
-                    profile.isLikedByCurrentUser
-                      ? 'bg-red-600 text-white shadow-lg scale-110'
-                      : 'bg-gray-800/50 text-gray-300 hover:bg-red-600/70 hover:text-white border border-gray-600 hover:border-red-500'
-                  }`}
-                  title={profile.isLikedByCurrentUser ? 'Quitar me gusta' : 'Me gusta'}
-                >
-                  <Heart className={`w-6 h-6 ${profile.isLikedByCurrentUser ? 'fill-current' : ''}`} />
-                  {profile.likesCount > 0 && (
-                    <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-bold shadow-lg">
-                      {profile.likesCount > 99 ? '99+' : profile.likesCount}
-                    </div>
-                  )}
-                </button>
               </div>
 
               {/* Media count and creation date */}
@@ -195,37 +178,62 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4  justify-between">
-                {profile.instagram && (
-                  <a
-                    href={`https://instagram.com/${profile.instagram.replace(
-                      "@",
-                      ""
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-4 py-2 rounded-full hover:from-pink-700 hover:to-purple-700 transition-colors"
+              <div className="flex items-center space-x-4 justify-between pt-2">
+                <div className="flex items-center space-x-2">
+                  {profile.instagram && (
+                    <a
+                      href={`https://instagram.com/${profile.instagram.replace(
+                        "@",
+                        ""
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-4 py-2 rounded-full hover:from-pink-700 hover:to-purple-700 transition-colors"
+                    >
+                      <Instagram className="w-4 h-4" />
+                      <span>{profile.instagram}</span>
+                    </a>
+                  )}
+                  <div
+                    className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
+                      profile.isAvailable !== false
+                        ? "bg-green-600/20 text-green-300 border border-green-600/30"
+                        : "bg-red-600/20 text-red-300 border border-red-600/30"
+                    }`}
                   >
-                    <Instagram className="w-4 h-4" />
-                    <span>{profile.instagram}</span>
-                  </a>
-                )}
-                <div
-                  className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
-                    profile.isAvailable !== false
-                      ? "bg-green-600/20 text-green-300 border border-green-600/30"
-                      : "bg-red-600/20 text-red-300 border border-red-600/30"
-                  }`}
-                >
-                  <span className="text-lg">
-                    {profile.isAvailable !== false ? "😏" : "😔"}
-                  </span>
-                  <span>
-                    {profile.isAvailable !== false
-                      ? "Disponible"
-                      : "No disponible"}
-                  </span>
+                    <span className="text-lg">
+                      {profile.isAvailable !== false ? "😏" : "😔"}
+                    </span>
+                    <span>
+                      {profile.isAvailable !== false
+                        ? "Disponible"
+                        : "No disponible"}
+                    </span>
+                  </div>
                 </div>
+                <button
+                  className={`relative p-3 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                    profile.isLikedByCurrentUser
+                      ? "bg-red-600 text-white shadow-lg scale-110"
+                      : "bg-gray-800/50 text-gray-300 hover:bg-red-600/70 hover:text-white border border-gray-600 hover:border-red-500"
+                  }`}
+                  title={
+                    profile.isLikedByCurrentUser
+                      ? "Quitar me gusta"
+                      : "Me gusta"
+                  }
+                >
+                  <Heart
+                    className={`w-5 h-5 ${
+                      profile.isLikedByCurrentUser ? "fill-current" : ""
+                    }`}
+                  />
+                  {profile.likesCount > 0 && (
+                    <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-bold shadow-lg">
+                      {profile.likesCount > 99 ? "99+" : profile.likesCount}
+                    </div>
+                  )}
+                </button>
               </div>
             </div>
 
@@ -237,17 +245,19 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                   <span>Situación Económica</span>
                 </h3>
                 <div className="space-y-3">
-                    {profile.netSalary && (
+                  {profile.netSalary && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Salario neto:</span>
                       <span className="text-white font-medium flex items-center space-x-1">
-                      <span className="text-white">RD$</span>
-                      <span>
-                        {Number(profile.netSalary.replace(/[^\d]/g, "")).toLocaleString('es-DO')}
-                      </span>
+                        <span className="text-white">RD$</span>
+                        <span>
+                          {Number(
+                            profile.netSalary.replace(/[^\d]/g, "")
+                          ).toLocaleString("es-DO")}
+                        </span>
                       </span>
                     </div>
-                    )}
+                  )}
                   {profile.fatherJob && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Trabajo del padre:</span>
