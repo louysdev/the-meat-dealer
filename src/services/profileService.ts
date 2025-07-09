@@ -481,7 +481,7 @@ export const toggleLike = async (profileId: string, userId: string): Promise<{ i
           profile_id: profileId,
           user_id: userId
         }]);
-    }
+
       if (insertError) {
         throw new Error(`Error agregando like: ${insertError.message}`);
       }
