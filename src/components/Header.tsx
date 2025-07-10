@@ -127,17 +127,19 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Agregar Perfil</span>
           </button>
 
-          <button
-            onClick={() => handleMenuItemClick(() => onPrivateVideos && onPrivateVideos())}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all duration-300 text-white hover:bg-white/10 ${
-              currentView === "private-videos"
-                ? "bg-red-600 shadow-lg"
-                : "text-white hover:bg-white/10"
-            }`}
-          >
-            <Shield className="w-5 h-5" />
-            <span>Videos Privados</span>
-          </button>
+          {onPrivateVideos && (
+            <button
+              onClick={() => handleMenuItemClick(() => onPrivateVideos())}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all duration-300 text-white hover:bg-white/10 ${
+                currentView === "private-videos" || currentView === "private-video-detail"
+                  ? "bg-red-600 shadow-lg"
+                  : "text-white hover:bg-white/10"
+              }`}
+            >
+              <Shield className="w-5 h-5" />
+              <span>Videos Privados</span>
+            </button>
+          )}
 
           {currentUser?.role === "admin" && onUserManagement && (
             <button

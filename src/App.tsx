@@ -265,6 +265,8 @@ function App() {
           currentUser={currentUser}
           onUserManagement={handleUserManagement}
           onCommentModeration={handleCommentModeration}
+          onPrivateVideos={handlePrivateVideos}
+          onCommentModeration={handleCommentModeration}
           onLogout={handleLogout}
         />
 
