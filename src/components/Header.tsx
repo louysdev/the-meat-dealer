@@ -10,6 +10,7 @@ import {
   Beef,
   Heart,
   HeartPulse,
+  MessageCircle,
 } from "lucide-react";
 import { User } from "../types";
 
@@ -20,11 +21,13 @@ interface HeaderProps {
     | "detail"
     | "edit"
     | "shared-profile"
-    | "user-management";
+    | "user-management"
+    | "comment-moderation";
   onViewChange: (view: "catalog" | "add") => void;
   onLogout?: () => void;
   currentUser?: User | null;
   onUserManagement?: () => void;
+  onCommentModeration?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({

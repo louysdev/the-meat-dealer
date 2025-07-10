@@ -10,6 +10,7 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorMessage } from './components/ErrorMessage';
 import { Modal } from './components/Modal';
 import { LoginForm } from './components/LoginForm';
+import { CommentModeration } from './components/CommentModeration';
 import { Profile } from './types';
 import { useProfiles } from './hooks/useProfiles';
 import { useModal } from './hooks/useModal';
@@ -23,7 +24,7 @@ declare global {
   }
 }
 
-type View = 'catalog' | 'add' | 'detail' | 'edit' | 'shared-profile' | 'user-management';
+type View = 'catalog' | 'add' | 'detail' | 'edit' | 'shared-profile' | 'user-management' | 'comment-moderation';
 
 function App() {
   const { currentUser, isAuthenticated, isLoading: authLoading, login, logout } = useAuth();
@@ -193,6 +194,12 @@ function App() {
     setCurrentView('user-management');
     setSelectedProfile(null);
   };
+
+  const handleCommentModeration = () => {
+    setCurrentView('comment-moderation');
+    setSelectedProfile(null);
+  };
+
   const handleLogout = () => {
     showConfirm(
       'Cerrar Sesión',
@@ -233,6 +240,7 @@ function App() {
           onViewChange={handleViewChange}
           currentUser={currentUser}
           onUserManagement={handleUserManagement}
+          onCommentModeration={handleCommentModeration}
           onLogout={handleLogout}
         />
 
