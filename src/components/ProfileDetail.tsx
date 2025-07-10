@@ -185,7 +185,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                       onToggleLike(profile.id);
                     }
                   }}
-                  className={`relative p-3 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                  className={`p-3 rounded-full backdrop-blur-sm transition-all duration-300 ${
                     profile.isLikedByCurrentUser
                       ? "bg-red-600 text-white shadow-lg scale-110"
                       : "bg-gray-800/50 text-gray-300 hover:bg-red-600/70 hover:text-white border border-gray-600 hover:border-red-500"
