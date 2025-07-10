@@ -36,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   currentUser,
   onUserManagement,
+  onCommentModeration,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
