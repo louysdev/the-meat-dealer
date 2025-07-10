@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X, Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { getDecryptedFileUrl } from '../services/profileService';
 
 interface MediaItem {
   url: string;
@@ -27,6 +28,48 @@ export const MediaSlider: React.FC<MediaSliderProps> = ({
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null);
+  const [decryptedUrls, setDecryptedUrls] = useState<Record<number, string>>({});
+  const [loadingUrls, setLoadingUrls] = useState<Record<number, boolean>>({});
+
+  // Descifrar URLs cuando sea necesario
+  useEffect(() => {
+    const decryptCurrentMedia = async () => {
+      const currentMedia = media[currentIndex];
+      if (!currentMedia || decryptedUrls[currentIndex] || loadingUrls[currentIndex]) {
+        return;
+      }
+
+      // Solo intentar descifrar si la URL parece ser de un archivo cifrado
+      if (currentMedia.url.includes('encrypted-files') && (currentMedia as any).encryptionMetadata) {
+        setLoadingUrls(prev => ({ ...prev, [currentIndex]: true }));
+        
+        try {
+          const decryptedUrl = await getDecryptedFileUrl(
+            currentMedia.url, 
+            (currentMedia as any).encryptionMetadata
+          );
+          setDecryptedUrls(prev => ({ ...prev, [currentIndex]: decryptedUrl }));
+        } catch (error) {
+          console.error('Error descifrando media:', error);
+        } finally {
+          setLoadingUrls(prev => ({ ...prev, [currentIndex]: false }));
+        }
+      }
+    };
+
+    decryptCurrentMedia();
+  }, [currentIndex, media]);
+
+  // Limpiar URLs temporales al desmontar
+  useEffect(() => {
+    return () => {
+      Object.values(decryptedUrls).forEach(url => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, []);
 
   useEffect(() => {
     if (!autoPlay || media.length <= 1) return;
@@ -78,6 +121,8 @@ export const MediaSlider: React.FC<MediaSliderProps> = ({
   if (media.length === 0) return null;
 
   const currentMedia = media[currentIndex];
+  const currentUrl = decryptedUrls[currentIndex] || currentMedia.url;
+  const isLoading = loadingUrls[currentIndex];
   const containerClass = fullscreen
     ? "fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
     : "relative h-full";
@@ -95,30 +140,45 @@ export const MediaSlider: React.FC<MediaSliderProps> = ({
 
       <div className="relative w-full h-full flex items-center justify-center">
         {currentMedia.type === 'photo' ? (
-          <img
-            src={currentMedia.url}
-            alt={`Imagen ${currentIndex + 1}`}
-            className={`${fullscreen ? 'max-w-4xl max-h-[90vh]' : 'w-full h-full'} object-cover rounded-lg ${
-              blurImages ? 'blur-xl' : ''
-            }`}
-          />
+          <>
+            {isLoading ? (
+              <div className="flex items-center justify-center w-full h-full bg-gray-800">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+              </div>
+            ) : (
+              <img
+                src={currentUrl}
+                alt={`Imagen ${currentIndex + 1}`}
+                className={`${fullscreen ? 'max-w-4xl max-h-[90vh]' : 'w-full h-full'} object-cover rounded-lg ${
+                  blurImages ? 'blur-xl' : ''
+                }`}
+              />
+            )}
+          </>
         ) : (
           <div className="relative">
-            <video
-              ref={setVideoRef}
-              src={currentMedia.url}
-              className={`${fullscreen ? 'max-w-4xl max-h-[90vh]' : 'w-full h-full'} object-cover rounded-lg ${
-                blurImages ? 'blur-xl' : ''
-              }`}
-              muted={isVideoMuted}
-              onPlay={() => setIsVideoPlaying(true)}
-              onPause={() => setIsVideoPlaying(false)}
-              onEnded={() => setIsVideoPlaying(false)}
-              controls={fullscreen}
-            />
+            {isLoading ? (
+              <div className="flex items-center justify-center w-full h-full bg-gray-800">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+              </div>
+            ) : (
+              <video
+                ref={setVideoRef}
+                src={currentUrl}
+                className={`${fullscreen ? 'max-w-4xl max-h-[90vh]' : 'w-full h-full'} object-cover rounded-lg ${
+                  blurImages ? 'blur-xl' : ''
+                }`}
+                muted={isVideoMuted}
+                onPlay={() => setIsVideoPlaying(true)}
+                onPause={() => setIsVideoPlaying(false)}
+                onEnded={() => setIsVideoPlaying(false)}
+                controls={fullscreen}
+              />
+            )}
             
-            {/* Video controls overlay */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+            {/* Video controls overlay - solo mostrar si no está cargando */}
+            {!isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
               <div className="flex space-x-4">
                 <button
                   onClick={toggleVideoPlay}
@@ -142,6 +202,7 @@ export const MediaSlider: React.FC<MediaSliderProps> = ({
                 </button>
               </div>
             </div>
+            )}
           </div>
         )}
 

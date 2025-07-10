@@ -2,6 +2,7 @@ import React from 'react';
 import { Heart, MapPin, Calendar, Instagram, Play } from 'lucide-react';
 import { Profile } from '../types';
 import { getTimeAgo, isNewProfile } from '../utils/dateUtils';
+import { getDecryptedFileUrl } from '../services/profileService';
 
 interface ProfileCardProps {
   profile: Profile;
@@ -16,6 +17,9 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   onToggleLike,
   blurImages = false
 }) => {
+  const [decryptedUrl, setDecryptedUrl] = React.useState<string | null>(null);
+  const [isLoadingImage, setIsLoadingImage] = React.useState(false);
+
   const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log('ProfileCard: Click en like, perfil:', profile.id, 'isLiked:', profile.isLikedByCurrentUser);
@@ -33,6 +37,42 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   const timeAgo = getTimeAgo(profile.createdAt);
   const isNew = isNewProfile(profile.createdAt);
 
+  // Descifrar la primera imagen si es necesario
+  React.useEffect(() => {
+    const decryptFirstMedia = async () => {
+      if (!firstMedia) return;
+
+      // Solo intentar descifrar si la URL parece ser de un archivo cifrado
+      if (firstMedia.url.includes('encrypted-files') && (firstMedia as any).encryptionMetadata) {
+        setIsLoadingImage(true);
+        try {
+          const decrypted = await getDecryptedFileUrl(
+            firstMedia.url, 
+            (firstMedia as any).encryptionMetadata
+          );
+          setDecryptedUrl(decrypted);
+        } catch (error) {
+          console.error('Error descifrando imagen del card:', error);
+        } finally {
+          setIsLoadingImage(false);
+        }
+      }
+    };
+
+    decryptFirstMedia();
+  }, [firstMedia]);
+
+  // Limpiar URL temporal al desmontar
+  React.useEffect(() => {
+    return () => {
+      if (decryptedUrl && decryptedUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(decryptedUrl);
+      }
+    };
+  }, [decryptedUrl]);
+
+  const displayUrl = decryptedUrl || firstMedia?.url;
+
   return (
     <div
       onClick={onClick}
@@ -42,9 +82,13 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       <div className="relative h-96 sm:h-72 md:h-80 overflow-hidden">
         {firstMedia ? (
           <>
-            {firstMedia.type === 'photo' ? (
+            {isLoadingImage ? (
+              <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+              </div>
+            ) : firstMedia.type === 'photo' ? (
               <img
-                src={firstMedia.url}
+                src={displayUrl}
                 alt={`${profile.firstName} ${profile.lastName}`}
                 className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${
                   blurImages ? 'blur-xl' : ''
@@ -53,7 +97,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             ) : (
               <div className="relative w-full h-full">
                 <video
-                  src={firstMedia.url}
+                  src={displayUrl}
                   className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${
                     blurImages ? 'blur-xl' : ''
                   }`}
