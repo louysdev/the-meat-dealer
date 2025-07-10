@@ -51,3 +51,4 @@ export const base64ToFile = (base64: string, fileName: string): File => {
     u8arr[n] = bstr.charCodeAt(n);
   }
   return new File([u8arr], fileName, { type: mime });
+}
