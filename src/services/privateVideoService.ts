@@ -628,7 +628,7 @@ const uploadPrivateVideo = async (
       .eq('profile_id', videoData.profileId)
       .order('video_order', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     const nextOrder = (lastVideo?.video_order || 0) + 1;
 
@@ -696,7 +696,7 @@ const uploadPrivatePhoto = async (
       .eq('profile_id', photoData.profileId)
       .order('photo_order', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     const nextOrder = (lastPhoto?.photo_order || 0) + 1;
 
