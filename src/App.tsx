@@ -462,6 +462,7 @@ function App() {
           <UserManagement 
             currentUser={currentUser}
             onBack={handleBackToCatalog}
+            onNavigateToModeration={() => setCurrentView('comment-moderation')}
           />
         )}
 

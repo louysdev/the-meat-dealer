@@ -495,7 +495,7 @@ export const revokePrivateVideoAccess = async (userId: string, profileId: string
   }
 };
 
-// Obtener comentarios de un perfil de video privado
+// Obtener comentarios de videos privados con estadísticas completas
 export const getPrivateVideoComments = async (
   profileId: string,
   currentUserId?: string
@@ -519,12 +519,11 @@ export const getPrivateVideoComments = async (
     const isAdmin = user.role === 'admin';
     const hasPrivateAccess = user.can_access_private_videos === true;
 
-    // Verificar acceso: admin o usuario con permisos
     if (!isAdmin && !hasPrivateAccess) {
       throw new Error('No tienes acceso a contenido privado');
     }
 
-    // Obtener comentarios principales
+    // Obtener comentarios principales con estadísticas
     const { data: comments, error } = await supabase
       .from('private_video_comments')
       .select(`
@@ -542,34 +541,117 @@ export const getPrivateVideoComments = async (
       .eq('profile_id', profileId)
       .is('parent_comment_id', null)
       .eq('is_deleted', false)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false });
 
     if (error) {
       throw new Error(`Error obteniendo comentarios: ${error.message}`);
     }
 
-    // Convertir y obtener estadísticas (implementación similar al sistema público)
-    // Por simplicidad, retornamos la estructura básica
-    return (comments || []).map(comment => ({
-      id: comment.id,
-      profileId: comment.profile_id,
-      userId: comment.user_id,
-      parentCommentId: comment.parent_comment_id,
-      content: comment.content,
-      isDeleted: comment.is_deleted,
-      isHidden: comment.is_hidden,
-      isEdited: comment.is_edited,
-      hiddenReason: comment.hidden_reason,
-      hiddenBy: comment.hidden_by,
-      hiddenAt: comment.hidden_at ? new Date(comment.hidden_at) : undefined,
-      createdAt: new Date(comment.created_at),
-      updatedAt: new Date(comment.updated_at),
-      user: convertDatabaseUser(comment.user),
-      likesCount: 0, // TODO: Implementar conteo real
-      dislikesCount: 0,
-      repliesCount: 0,
-      userLikeStatus: null
-    }));
+    if (!comments) return [];
+
+    // Obtener estadísticas de likes/dislikes y respuestas para cada comentario
+    const commentsWithStats = await Promise.all(
+      comments.map(async (comment) => {
+        // Obtener likes/dislikes
+        const { data: likes } = await supabase
+          .from('private_video_comment_likes')
+          .select('is_like, user_id')
+          .eq('comment_id', comment.id);
+
+        const likesCount = likes?.filter(l => l.is_like === true).length || 0;
+        const dislikesCount = likes?.filter(l => l.is_like === false).length || 0;
+        const userLike = likes?.find(l => l.user_id === currentUserId);
+
+        // Obtener conteo de respuestas
+        const { count: repliesCount } = await supabase
+          .from('private_video_comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('parent_comment_id', comment.id)
+          .eq('is_deleted', false);
+
+        // Obtener respuestas si las hay
+        let replies: PrivateVideoComment[] = [];
+        if (repliesCount && repliesCount > 0) {
+          const { data: repliesData } = await supabase
+            .from('private_video_comments')
+            .select(`
+              *,
+              user:user_id(
+                id,
+                full_name,
+                username,
+                role,
+                is_active,
+                created_at,
+                updated_at
+              )
+            `)
+            .eq('parent_comment_id', comment.id)
+            .eq('is_deleted', false)
+            .order('created_at', { ascending: true });
+
+          if (repliesData) {
+            replies = await Promise.all(
+              repliesData.map(async (reply) => {
+                const { data: replyLikes } = await supabase
+                  .from('private_video_comment_likes')
+                  .select('is_like, user_id')
+                  .eq('comment_id', reply.id);
+
+                const replyLikesCount = replyLikes?.filter(l => l.is_like === true).length || 0;
+                const replyDislikesCount = replyLikes?.filter(l => l.is_like === false).length || 0;
+                const userReplyLike = replyLikes?.find(l => l.user_id === currentUserId);
+
+                return {
+                  id: reply.id,
+                  profileId: reply.profile_id,
+                  userId: reply.user_id,
+                  parentCommentId: reply.parent_comment_id,
+                  content: reply.content,
+                  isDeleted: reply.is_deleted,
+                  isHidden: reply.is_hidden,
+                  isEdited: reply.is_edited,
+                  hiddenReason: reply.hidden_reason,
+                  hiddenBy: reply.hidden_by,
+                  hiddenAt: reply.hidden_at ? new Date(reply.hidden_at) : undefined,
+                  createdAt: new Date(reply.created_at),
+                  updatedAt: new Date(reply.updated_at),
+                  user: convertDatabaseUser(reply.user),
+                  likesCount: replyLikesCount,
+                  dislikesCount: replyDislikesCount,
+                  repliesCount: 0,
+                  userLikeStatus: userReplyLike ? (userReplyLike.is_like ? 'like' as const : 'dislike' as const) : null
+                };
+              })
+            );
+          }
+        }
+
+        return {
+          id: comment.id,
+          profileId: comment.profile_id,
+          userId: comment.user_id,
+          parentCommentId: comment.parent_comment_id,
+          content: comment.content,
+          isDeleted: comment.is_deleted,
+          isHidden: comment.is_hidden,
+          isEdited: comment.is_edited,
+          hiddenReason: comment.hidden_reason,
+          hiddenBy: comment.hidden_by,
+          hiddenAt: comment.hidden_at ? new Date(comment.hidden_at) : undefined,
+          createdAt: new Date(comment.created_at),
+          updatedAt: new Date(comment.updated_at),
+          user: convertDatabaseUser(comment.user),
+          likesCount,
+          dislikesCount,
+          repliesCount: repliesCount || 0,
+          userLikeStatus: userLike ? (userLike.is_like ? 'like' as const : 'dislike' as const) : null,
+          replies
+        };
+      })
+    );
+
+    return commentsWithStats;
   } catch (error) {
     console.error('Error en getPrivateVideoComments:', error);
     throw error;
@@ -582,7 +664,7 @@ export const createPrivateVideoComment = async (
   userId: string
 ): Promise<PrivateVideoComment> => {
   try {
-    // Verificar si el usuario tiene acceso a videos privados
+    // Verificar acceso
     const { data: user } = await supabase
       .from('users')
       .select('role, can_access_private_videos')
@@ -596,7 +678,6 @@ export const createPrivateVideoComment = async (
     const isAdmin = user.role === 'admin';
     const hasPrivateAccess = user.can_access_private_videos === true;
 
-    // Verificar acceso: admin o usuario con permisos
     if (!isAdmin && !hasPrivateAccess) {
       throw new Error('No tienes acceso a contenido privado');
     }
@@ -653,150 +734,303 @@ export const createPrivateVideoComment = async (
   }
 };
 
-// Subir video privado
-export const uploadPrivateVideo = async (
-  videoData: CreatePrivateVideoData,
-  uploadedBy: string
-): Promise<PrivateVideo> => {
+// Editar comentario de video privado
+export const editPrivateVideoComment = async (
+  commentId: string,
+  content: string,
+  userId: string
+): Promise<PrivateVideoComment> => {
   try {
-    // Subir archivo de video
-    const videoExt = videoData.videoFile.name.split('.').pop();
-    const videoFileName = `${videoData.profileId}/${Date.now()}.${videoExt}`;
-    
-    const { error: videoError } = await supabase.storage
-      .from('private-videos')
-      .upload(videoFileName, videoData.videoFile);
-
-    if (videoError) {
-      throw new Error(`Error subiendo video: ${videoError.message}`);
-    }
-
-    const { data: { publicUrl: videoUrl } } = supabase.storage
-      .from('private-videos')
-      .getPublicUrl(videoFileName);
-
-    // Subir thumbnail si existe
-    let thumbnailUrl: string | undefined;
-    if (videoData.thumbnailFile) {
-      const thumbExt = videoData.thumbnailFile.name.split('.').pop();
-      const thumbFileName = `${videoData.profileId}/thumb_${Date.now()}.${thumbExt}`;
-      
-      const { error: thumbError } = await supabase.storage
-        .from('private-photos')
-        .upload(thumbFileName, videoData.thumbnailFile);
-
-      if (!thumbError) {
-        const { data: { publicUrl } } = supabase.storage
-          .from('private-photos')
-          .getPublicUrl(thumbFileName);
-        thumbnailUrl = publicUrl;
-      }
-    }
-
-    // Obtener el siguiente orden
-    const { data: lastVideo } = await supabase
-      .from('private_videos')
-      .select('video_order')
-      .eq('profile_id', videoData.profileId)
-      .order('video_order', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const nextOrder = (lastVideo?.video_order || 0) + 1;
-
-    // Crear registro en la base de datos
-    const { data: video, error: dbError } = await supabase
-      .from('private_videos')
-      .insert([{
-        profile_id: videoData.profileId,
-        title: videoData.title,
-        video_url: videoUrl,
-        thumbnail_url: thumbnailUrl,
-        video_order: nextOrder,
-        uploaded_by: uploadedBy
-      }])
-      .select()
+    // Verificar que el comentario existe y pertenece al usuario
+    const { data: comment, error: fetchError } = await supabase
+      .from('private_video_comments')
+      .select('user_id')
+      .eq('id', commentId)
       .single();
 
-    if (dbError) {
-      throw new Error(`Error guardando video: ${dbError.message}`);
+    if (fetchError || !comment) {
+      throw new Error('Comentario no encontrado');
+    }
+
+    if (comment.user_id !== userId) {
+      throw new Error('No tienes permisos para editar este comentario');
+    }
+
+    const { data: updatedComment, error } = await supabase
+      .from('private_video_comments')
+      .update({
+        content,
+        is_edited: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', commentId)
+      .select(`
+        *,
+        user:user_id(
+          id,
+          full_name,
+          username,
+          role,
+          is_active,
+          created_at,
+          updated_at
+        )
+      `)
+      .single();
+
+    if (error) {
+      throw new Error(`Error editando comentario: ${error.message}`);
     }
 
     return {
-      id: video.id,
-      profileId: video.profile_id,
-      title: video.title,
-      videoUrl: video.video_url,
-      thumbnailUrl: video.thumbnail_url,
-      durationSeconds: video.duration_seconds,
-      fileSizeMb: video.file_size_mb,
-      videoOrder: video.video_order,
-      createdAt: new Date(video.created_at)
+      id: updatedComment.id,
+      profileId: updatedComment.profile_id,
+      userId: updatedComment.user_id,
+      parentCommentId: updatedComment.parent_comment_id,
+      content: updatedComment.content,
+      isDeleted: updatedComment.is_deleted,
+      isHidden: updatedComment.is_hidden,
+      isEdited: updatedComment.is_edited,
+      hiddenReason: updatedComment.hidden_reason,
+      hiddenBy: updatedComment.hidden_by,
+      hiddenAt: updatedComment.hidden_at ? new Date(updatedComment.hidden_at) : undefined,
+      createdAt: new Date(updatedComment.created_at),
+      updatedAt: new Date(updatedComment.updated_at),
+      user: convertDatabaseUser(updatedComment.user),
+      likesCount: 0,
+      dislikesCount: 0,
+      repliesCount: 0,
+      userLikeStatus: null
     };
   } catch (error) {
-    console.error('Error en uploadPrivateVideo:', error);
+    console.error('Error en editPrivateVideoComment:', error);
     throw error;
   }
 };
 
-// Subir foto privada
-export const uploadPrivatePhoto = async (
-  photoData: CreatePrivatePhotoData,
-  uploadedBy: string
-): Promise<PrivatePhoto> => {
+// Eliminar comentario de video privado
+export const deletePrivateVideoComment = async (
+  commentId: string,
+  userId: string
+): Promise<void> => {
   try {
-    // Subir archivo de foto
-    const photoExt = photoData.photoFile.name.split('.').pop();
-    const photoFileName = `${photoData.profileId}/${Date.now()}.${photoExt}`;
-    
-    const { error: photoError } = await supabase.storage
-      .from('private-photos')
-      .upload(photoFileName, photoData.photoFile);
-
-    if (photoError) {
-      throw new Error(`Error subiendo foto: ${photoError.message}`);
-    }
-
-    const { data: { publicUrl: photoUrl } } = supabase.storage
-      .from('private-photos')
-      .getPublicUrl(photoFileName);
-
-    // Obtener el siguiente orden
-    const { data: lastPhoto } = await supabase
-      .from('private_photos')
-      .select('photo_order')
-      .eq('profile_id', photoData.profileId)
-      .order('photo_order', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const nextOrder = (lastPhoto?.photo_order || 0) + 1;
-
-    // Crear registro en la base de datos
-    const { data: photo, error: dbError } = await supabase
-      .from('private_photos')
-      .insert([{
-        profile_id: photoData.profileId,
-        photo_url: photoUrl,
-        photo_order: nextOrder,
-        uploaded_by: uploadedBy
-      }])
-      .select()
+    // Verificar que el comentario existe
+    const { data: comment, error: fetchError } = await supabase
+      .from('private_video_comments')
+      .select('user_id')
+      .eq('id', commentId)
       .single();
 
-    if (dbError) {
-      throw new Error(`Error guardando foto: ${dbError.message}`);
+    if (fetchError || !comment) {
+      throw new Error('Comentario no encontrado');
     }
 
-    return {
-      id: photo.id,
-      profileId: photo.profile_id,
-      photoUrl: photo.photo_url,
-      photoOrder: photo.photo_order,
-      createdAt: new Date(photo.created_at)
-    };
+    // Verificar permisos (el dueño del comentario o admin)
+    const { data: user } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    const canDelete = comment.user_id === userId || user?.role === 'admin';
+
+    if (!canDelete) {
+      throw new Error('No tienes permisos para eliminar este comentario');
+    }
+
+    const { error } = await supabase
+      .from('private_video_comments')
+      .update({
+        is_deleted: true,
+        content: '[Comentario eliminado]',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', commentId);
+
+    if (error) {
+      throw new Error(`Error eliminando comentario: ${error.message}`);
+    }
   } catch (error) {
-    console.error('Error en uploadPrivatePhoto:', error);
+    console.error('Error en deletePrivateVideoComment:', error);
+    throw error;
+  }
+};
+
+// Toggle like/dislike en comentario de video privado
+export const togglePrivateVideoCommentLike = async (
+  commentId: string,
+  isLike: boolean,
+  userId: string
+): Promise<void> => {
+  try {
+    // Verificar si ya existe un like/dislike del usuario
+    const { data: existingLike, error: fetchError } = await supabase
+      .from('private_video_comment_likes')
+      .select('*')
+      .eq('comment_id', commentId)
+      .eq('user_id', userId)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw new Error(`Error verificando like: ${fetchError.message}`);
+    }
+
+    if (existingLike) {
+      if (existingLike.is_like === isLike) {
+        // Si es el mismo tipo de like, eliminarlo
+        const { error } = await supabase
+          .from('private_video_comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', userId);
+
+        if (error) {
+          throw new Error(`Error eliminando like: ${error.message}`);
+        }
+      } else {
+        // Si es diferente, actualizarlo
+        const { error } = await supabase
+          .from('private_video_comment_likes')
+          .update({ is_like: isLike })
+          .eq('comment_id', commentId)
+          .eq('user_id', userId);
+
+        if (error) {
+          throw new Error(`Error actualizando like: ${error.message}`);
+        }
+      }
+    } else {
+      // Crear nuevo like
+      const { error } = await supabase
+        .from('private_video_comment_likes')
+        .insert([{
+          comment_id: commentId,
+          user_id: userId,
+          is_like: isLike
+        }]);
+
+      if (error) {
+        throw new Error(`Error creando like: ${error.message}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error en togglePrivateVideoCommentLike:', error);
+    throw error;
+  }
+};
+
+// Moderar comentario de video privado
+export const moderatePrivateVideoComment = async (
+  commentId: string,
+  isHidden: boolean,
+  hiddenReason: string | undefined,
+  moderatorId: string
+): Promise<void> => {
+  try {
+    // Verificar que el usuario es admin
+    const { data: user } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', moderatorId)
+      .single();
+
+    if (!user || user.role !== 'admin') {
+      throw new Error('No tienes permisos para moderar comentarios');
+    }
+
+    const { error } = await supabase
+      .from('private_video_comments')
+      .update({
+        is_hidden: isHidden,
+        hidden_reason: hiddenReason || null,
+        hidden_by: isHidden ? moderatorId : null,
+        hidden_at: isHidden ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', commentId);
+
+    if (error) {
+      throw new Error(`Error moderando comentario: ${error.message}`);
+    }
+  } catch (error) {
+    console.error('Error en moderatePrivateVideoComment:', error);
+    throw error;
+  }
+};
+
+// Obtener comentarios para moderación (solo videos privados)
+export const getPrivateVideoCommentsForModeration = async (): Promise<PrivateVideoComment[]> => {
+  try {
+    const { data: comments, error } = await supabase
+      .from('private_video_comments')
+      .select(`
+        *,
+        user:user_id(
+          id,
+          full_name,
+          username,
+          role,
+          is_active,
+          created_at,
+          updated_at
+        ),
+        profile:profile_id(
+          id,
+          name
+        )
+      `)
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Error obteniendo comentarios para moderación: ${error.message}`);
+    }
+
+    if (!comments) return [];
+
+    // Obtener estadísticas para cada comentario
+    const commentsWithStats = await Promise.all(
+      comments.map(async (comment) => {
+        const { data: likes } = await supabase
+          .from('private_video_comment_likes')
+          .select('is_like')
+          .eq('comment_id', comment.id);
+
+        const likesCount = likes?.filter(l => l.is_like === true).length || 0;
+        const dislikesCount = likes?.filter(l => l.is_like === false).length || 0;
+
+        const { count: repliesCount } = await supabase
+          .from('private_video_comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('parent_comment_id', comment.id)
+          .eq('is_deleted', false);
+
+        return {
+          id: comment.id,
+          profileId: comment.profile_id,
+          userId: comment.user_id,
+          parentCommentId: comment.parent_comment_id,
+          content: comment.content,
+          isDeleted: comment.is_deleted,
+          isHidden: comment.is_hidden,
+          isEdited: comment.is_edited,
+          hiddenReason: comment.hidden_reason,
+          hiddenBy: comment.hidden_by,
+          hiddenAt: comment.hidden_at ? new Date(comment.hidden_at) : undefined,
+          createdAt: new Date(comment.created_at),
+          updatedAt: new Date(comment.updated_at),
+          user: convertDatabaseUser(comment.user),
+          likesCount,
+          dislikesCount,
+          repliesCount: repliesCount || 0,
+          userLikeStatus: null
+        };
+      })
+    );
+
+    return commentsWithStats;
+  } catch (error) {
+    console.error('Error en getPrivateVideoCommentsForModeration:', error);
     throw error;
   }
 };
@@ -1093,6 +1327,207 @@ export const deletePrivateVideo = async (videoId: string): Promise<void> => {
     }
   } catch (error) {
     console.error('Error en deletePrivateVideo:', error);
+    throw error;
+  }
+};
+
+// Subir video privado
+export const uploadPrivateVideo = async (
+  videoData: CreatePrivateVideoData,
+  uploadedBy: string
+): Promise<PrivateVideo> => {
+  try {
+    // Verificar permisos
+    const { data: user } = await supabase
+      .from('users')
+      .select('role, can_access_private_videos')
+      .eq('id', uploadedBy)
+      .single();
+
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const isAdmin = user.role === 'admin';
+    const hasPrivateAccess = user.can_access_private_videos === true;
+
+    if (!isAdmin && !hasPrivateAccess) {
+      throw new Error('No tienes acceso a contenido privado');
+    }
+
+    // Subir archivo de video
+    const timestamp = Date.now();
+    const videoFileName = `${videoData.profileId}/${timestamp}_${videoData.videoFile.name}`;
+    
+    const { error: videoError } = await supabase.storage
+      .from('private-videos')
+      .upload(videoFileName, videoData.videoFile);
+
+    if (videoError) {
+      throw new Error(`Error subiendo video: ${videoError.message}`);
+    }
+
+    // Obtener URL pública del video
+    const { data: videoUrlData } = supabase.storage
+      .from('private-videos')
+      .getPublicUrl(videoFileName);
+
+    const videoUrl = videoUrlData.publicUrl;
+
+    // Obtener el siguiente order
+    const { count } = await supabase
+      .from('private_videos')
+      .select('*', { count: 'exact', head: true })
+      .eq('profile_id', videoData.profileId);
+
+    const videoOrder = (count || 0) + 1;
+
+    // Crear registro en la base de datos
+    const { data: video, error: dbError } = await supabase
+      .from('private_videos')
+      .insert([{
+        profile_id: videoData.profileId,
+        title: videoData.title,
+        video_url: videoUrl,
+        duration_seconds: 0, // Se puede calcular después
+        file_size_mb: Math.round(videoData.videoFile.size / (1024 * 1024) * 100) / 100,
+        video_order: videoOrder,
+        uploaded_by: uploadedBy
+      }])
+      .select(`
+        *,
+        uploaded_by_user:uploaded_by(
+          id,
+          full_name,
+          username,
+          role,
+          is_active,
+          created_at,
+          updated_at
+        )
+      `)
+      .single();
+
+    if (dbError) {
+      // Si falla la DB, limpiar el archivo subido
+      await supabase.storage
+        .from('private-videos')
+        .remove([videoFileName]);
+      
+      throw new Error(`Error guardando video en base de datos: ${dbError.message}`);
+    }
+
+    return {
+      id: video.id,
+      profileId: video.profile_id,
+      title: video.title,
+      videoUrl: video.video_url,
+      thumbnailUrl: video.thumbnail_url,
+      durationSeconds: video.duration_seconds,
+      fileSizeMb: video.file_size_mb,
+      videoOrder: video.video_order,
+      createdAt: new Date(video.created_at),
+      uploadedBy: video.uploaded_by_user ? convertDatabaseUser(video.uploaded_by_user) : undefined
+    };
+  } catch (error) {
+    console.error('Error en uploadPrivateVideo:', error);
+    throw error;
+  }
+};
+
+// Subir foto privada
+export const uploadPrivatePhoto = async (
+  photoData: CreatePrivatePhotoData,
+  uploadedBy: string
+): Promise<PrivatePhoto> => {
+  try {
+    // Verificar permisos
+    const { data: user } = await supabase
+      .from('users')
+      .select('role, can_access_private_videos')
+      .eq('id', uploadedBy)
+      .single();
+
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const isAdmin = user.role === 'admin';
+    const hasPrivateAccess = user.can_access_private_videos === true;
+
+    if (!isAdmin && !hasPrivateAccess) {
+      throw new Error('No tienes acceso a contenido privado');
+    }
+
+    // Subir archivo de foto
+    const timestamp = Date.now();
+    const photoFileName = `${photoData.profileId}/${timestamp}_${photoData.photoFile.name}`;
+    
+    const { error: photoError } = await supabase.storage
+      .from('private-photos')
+      .upload(photoFileName, photoData.photoFile);
+
+    if (photoError) {
+      throw new Error(`Error subiendo foto: ${photoError.message}`);
+    }
+
+    // Obtener URL pública de la foto
+    const { data: photoUrlData } = supabase.storage
+      .from('private-photos')
+      .getPublicUrl(photoFileName);
+
+    const photoUrl = photoUrlData.publicUrl;
+
+    // Obtener el siguiente order
+    const { count } = await supabase
+      .from('private_photos')
+      .select('*', { count: 'exact', head: true })
+      .eq('profile_id', photoData.profileId);
+
+    const photoOrder = (count || 0) + 1;
+
+    // Crear registro en la base de datos
+    const { data: photo, error: dbError } = await supabase
+      .from('private_photos')
+      .insert([{
+        profile_id: photoData.profileId,
+        photo_url: photoUrl,
+        photo_order: photoOrder,
+        uploaded_by: uploadedBy
+      }])
+      .select(`
+        *,
+        uploaded_by_user:uploaded_by(
+          id,
+          full_name,
+          username,
+          role,
+          is_active,
+          created_at,
+          updated_at
+        )
+      `)
+      .single();
+
+    if (dbError) {
+      // Si falla la DB, limpiar el archivo subido
+      await supabase.storage
+        .from('private-photos')
+        .remove([photoFileName]);
+      
+      throw new Error(`Error guardando foto en base de datos: ${dbError.message}`);
+    }
+
+    return {
+      id: photo.id,
+      profileId: photo.profile_id,
+      photoUrl: photo.photo_url,
+      photoOrder: photo.photo_order,
+      createdAt: new Date(photo.created_at),
+      uploadedBy: photo.uploaded_by_user ? convertDatabaseUser(photo.uploaded_by_user) : undefined
+    };
+  } catch (error) {
+    console.error('Error en uploadPrivatePhoto:', error);
     throw error;
   }
 };

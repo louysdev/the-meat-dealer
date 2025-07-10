@@ -276,11 +276,12 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ profileId, cur
     comments,
     loading,
     error,
-    createComment,
-    updateComment,
+    submitComment,
+    editComment,
     deleteComment,
-    toggleCommentLike,
-    moderateComment
+    toggleLike,
+    moderateComment,
+    submitting
   } = useComments(profileId, currentUser?.id);
 
   const [newComment, setNewComment] = useState('');
@@ -288,13 +289,10 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ profileId, cur
   const [replyContent, setReplyContent] = useState('');
 
   const handleSubmitComment = async () => {
-    if (!newComment.trim() || !currentUser) return;
+    if (!newComment.trim() || !currentUser || submitting) return;
 
     try {
-      await createComment({
-        profileId,
-        content: newComment.trim()
-      });
+      await submitComment(newComment.trim());
       setNewComment('');
     } catch (error) {
       console.error('Error enviando comentario:', error);
@@ -302,14 +300,10 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ profileId, cur
   };
 
   const handleSubmitReply = async () => {
-    if (!replyContent.trim() || !currentUser || !replyingTo) return;
+    if (!replyContent.trim() || !currentUser || !replyingTo || submitting) return;
 
     try {
-      await createComment({
-        profileId,
-        content: replyContent.trim(),
-        parentCommentId: replyingTo
-      });
+      await submitComment(replyContent.trim(), replyingTo);
       setReplyContent('');
       setReplyingTo(null);
     } catch (error) {
@@ -319,7 +313,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ profileId, cur
 
   const handleEdit = async (commentId: string, content: string) => {
     try {
-      await updateComment(commentId, content);
+      await editComment(commentId, content);
     } catch (error) {
       console.error('Error editando comentario:', error);
     }
@@ -337,7 +331,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ profileId, cur
 
   const handleToggleLike = async (commentId: string, isLike: boolean) => {
     try {
-      await toggleCommentLike(commentId, isLike);
+      await toggleLike(commentId, isLike);
     } catch (error) {
       console.error('Error actualizando reacción:', error);
     }
@@ -345,7 +339,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ profileId, cur
 
   const handleModerate = async (commentId: string, isHidden: boolean, reason?: string) => {
     try {
-      await moderateComment(commentId, { isHidden, hiddenReason: reason });
+      await moderateComment(commentId, isHidden, reason);
     } catch (error) {
       console.error('Error moderando comentario:', error);
     }
@@ -394,11 +388,11 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ profileId, cur
               </span>
               <button
                 onClick={handleSubmitComment}
-                disabled={!newComment.trim()}
+                disabled={!newComment.trim() || submitting}
                 className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
               >
                 <Send className="w-4 h-4" />
-                <span>Comentar</span>
+                <span>{submitting ? 'Enviando...' : 'Comentar'}</span>
               </button>
             </div>
           </div>
@@ -462,10 +456,10 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ profileId, cur
                 </button>
                 <button
                   onClick={handleSubmitReply}
-                  disabled={!replyContent.trim()}
+                  disabled={!replyContent.trim() || submitting}
                   className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors"
                 >
-                  Responder
+                  {submitting ? 'Enviando...' : 'Responder'}
                 </button>
               </div>
             </div>

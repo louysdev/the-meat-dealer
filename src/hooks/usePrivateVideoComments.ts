@@ -1,9 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Comment, CreateCommentData, CommentModerationData } from '../types';
-import * as commentService from '../services/commentService';
+import { PrivateVideoComment, CreatePrivateVideoCommentData } from '../types';
+import {
+  getPrivateVideoComments,
+  createPrivateVideoComment,
+  editPrivateVideoComment,
+  deletePrivateVideoComment,
+  togglePrivateVideoCommentLike,
+  moderatePrivateVideoComment
+} from '../services/privateVideoService';
 
-interface UseCommentsResult {
-  comments: Comment[];
+interface UsePrivateVideoCommentsResult {
+  comments: PrivateVideoComment[];
   loading: boolean;
   error: string | null;
   submitComment: (content: string, parentId?: string) => Promise<void>;
@@ -15,23 +22,22 @@ interface UseCommentsResult {
   submitting: boolean;
 }
 
-export const useComments = (
-  profileId: string, 
+export const usePrivateVideoComments = (
+  profileId: string,
   currentUserId?: string
-): UseCommentsResult => {
-  const [comments, setComments] = useState<Comment[]>([]);
+): UsePrivateVideoCommentsResult => {
+  const [comments, setComments] = useState<PrivateVideoComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Cargar comentarios
   const loadComments = useCallback(async () => {
     if (!profileId) return;
 
     try {
       setLoading(true);
       setError(null);
-      const data = await commentService.getProfileComments(profileId, currentUserId);
+      const data = await getPrivateVideoComments(profileId, currentUserId);
       setComments(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error cargando comentarios');
@@ -51,13 +57,13 @@ export const useComments = (
       setSubmitting(true);
       setError(null);
 
-      const commentData: CreateCommentData = {
+      const commentData: CreatePrivateVideoCommentData = {
         profileId,
         content: content.trim(),
         parentCommentId: parentId
       };
 
-      await commentService.createComment(commentData, currentUserId);
+      await createPrivateVideoComment(commentData, currentUserId);
       await loadComments(); // Recargar para mostrar el nuevo comentario con estadísticas actualizadas
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error enviando comentario');
@@ -72,7 +78,7 @@ export const useComments = (
 
     try {
       setError(null);
-      await commentService.updateComment(commentId, content, currentUserId);
+      await editPrivateVideoComment(commentId, content, currentUserId);
       await loadComments();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error editando comentario');
@@ -85,7 +91,7 @@ export const useComments = (
 
     try {
       setError(null);
-      await commentService.deleteComment(commentId, currentUserId);
+      await deletePrivateVideoComment(commentId, currentUserId);
       await loadComments();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error eliminando comentario');
@@ -98,7 +104,7 @@ export const useComments = (
 
     try {
       setError(null);
-      await commentService.toggleCommentLike(commentId, currentUserId, isLike);
+      await togglePrivateVideoCommentLike(commentId, isLike, currentUserId);
       await loadComments();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error actualizando like');
@@ -111,13 +117,16 @@ export const useComments = (
 
     try {
       setError(null);
-      const moderationData: CommentModerationData = { isHidden, hiddenReason: reason };
-      await commentService.moderateComment(commentId, moderationData, currentUserId);
+      await moderatePrivateVideoComment(commentId, isHidden, reason, currentUserId);
       await loadComments();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error moderando comentario');
       throw err;
     }
+  };
+
+  const refreshComments = async () => {
+    await loadComments();
   };
 
   return {
@@ -129,7 +138,7 @@ export const useComments = (
     deleteComment,
     toggleLike,
     moderateComment,
-    refreshComments: loadComments,
+    refreshComments,
     submitting
   };
 };

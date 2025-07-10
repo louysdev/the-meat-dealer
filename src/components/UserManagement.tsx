@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Edit, Trash2, UserCheck, UserX, Eye, EyeOff, UserRoundPlus, ArrowLeft, Video, VideoOff } from 'lucide-react';
+import { Users, Edit, Trash2, UserCheck, UserX, Eye, EyeOff, UserRoundPlus, ArrowLeft, Video, VideoOff, MessageCircle } from 'lucide-react';
 import { User, CreateUserData } from '../types';
 import { getUsers, createUser, updateUser, toggleUserStatus, togglePrivateVideoAccess, deleteUser } from '../services/userService';
 import { Modal } from './Modal';
@@ -8,9 +8,10 @@ import { LoadingSpinner } from './LoadingSpinner';
 interface UserManagementProps {
   currentUser: User;
   onBack?: () => void;
+  onNavigateToModeration?: () => void;
 }
 
-export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onBack }) => {
+export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onBack, onNavigateToModeration }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -178,6 +179,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
             <h2 className="text-2xl font-bold text-white">Gestión de Usuarios</h2>
           </div>
           <div className="flex space-x-3">
+            {onNavigateToModeration && (
+              <button
+                onClick={onNavigateToModeration}
+                className="bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Moderación</span>
+              </button>
+            )}
             <button
               onClick={() => setShowCreateForm(true)}
               className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white  px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"

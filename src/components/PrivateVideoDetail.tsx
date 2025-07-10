@@ -345,16 +345,9 @@ export const PrivateVideoDetail: React.FC<PrivateVideoDetailProps> = ({
           </div>
         </div>
 
-        {/* Comments Section */}
+        {/* Sección de comentarios */}
         <div className="mt-8">
-          <div className="bg-gray-800/50 rounded-xl border border-gray-700">
-            <div className="p-6">
-              <PrivateVideoComments
-                profileId={profile.id}
-                currentUser={currentUser}
-              />
-            </div>
-          </div>
+          <PrivateVideoComments profileId={profile.id} currentUser={currentUser} />
         </div>
       </div>
 

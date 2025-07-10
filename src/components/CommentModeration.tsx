@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Eye, EyeOff, Flag, User, Calendar, ThumbsUp, ThumbsDown, ArrowLeft } from 'lucide-react';
-import { Comment, User as UserType } from '../types';
+import { MessageCircle, Eye, EyeOff, Flag, User, Calendar, ThumbsUp, ThumbsDown, ArrowLeft, Shield, Users } from 'lucide-react';
+import { Comment, PrivateVideoComment, User as UserType } from '../types';
 import { getCommentsForModeration, moderateComment } from '../services/commentService';
+import { getPrivateVideoCommentsForModeration, moderatePrivateVideoComment } from '../services/privateVideoService';
 import { getTimeAgo } from '../utils/dateUtils';
 
 interface CommentModerationProps {
@@ -9,12 +10,18 @@ interface CommentModerationProps {
   onBack?: () => void;
 }
 
+type ModerationComment = (Comment | PrivateVideoComment) & {
+  type: 'public' | 'private';
+  profileName?: string;
+};
+
 export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUser, onBack }) => {
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<ModerationComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'visible' | 'hidden'>('all');
-  const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
+  const [typeFilter, setTypeFilter] = useState<'all' | 'public' | 'private'>('all');
+  const [selectedComment, setSelectedComment] = useState<ModerationComment | null>(null);
   const [moderationReason, setModerationReason] = useState('');
 
   useEffect(() => {
@@ -25,8 +32,23 @@ export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUse
     try {
       setLoading(true);
       setError(null);
-      const data = await getCommentsForModeration();
-      setComments(data);
+      
+      // Cargar comentarios públicos y privados en paralelo
+      const [publicComments, privateComments] = await Promise.all([
+        getCommentsForModeration(),
+        getPrivateVideoCommentsForModeration()
+      ]);
+
+      // Combinar y marcar el tipo
+      const allComments: ModerationComment[] = [
+        ...publicComments.map(comment => ({ ...comment, type: 'public' as const })),
+        ...privateComments.map(comment => ({ ...comment, type: 'private' as const }))
+      ];
+
+      // Ordenar por fecha de creación (más recientes primero)
+      allComments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      setComments(allComments);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error cargando comentarios');
     } finally {
@@ -34,9 +56,14 @@ export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUse
     }
   };
 
-  const handleModerate = async (commentId: string, isHidden: boolean, reason?: string) => {
+  const handleModerate = async (commentId: string, isHidden: boolean, commentType: 'public' | 'private', reason?: string) => {
     try {
-      await moderateComment(commentId, { isHidden, hiddenReason: reason }, currentUser.id);
+      if (commentType === 'public') {
+        await moderateComment(commentId, { isHidden, hiddenReason: reason }, currentUser.id);
+      } else {
+        await moderatePrivateVideoComment(commentId, isHidden, reason, currentUser.id);
+      }
+      
       await loadComments(); // Recargar comentarios
       setSelectedComment(null);
       setModerationReason('');
@@ -46,14 +73,31 @@ export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUse
   };
 
   const filteredComments = comments.filter(comment => {
-    switch (filter) {
-      case 'visible':
-        return !comment.isHidden;
-      case 'hidden':
-        return comment.isHidden;
-      default:
-        return true;
-    }
+    // Filtrar por visibilidad
+    const visibilityMatch = (() => {
+      switch (filter) {
+        case 'visible':
+          return !comment.isHidden;
+        case 'hidden':
+          return comment.isHidden;
+        default:
+          return true;
+      }
+    })();
+
+    // Filtrar por tipo
+    const typeMatch = (() => {
+      switch (typeFilter) {
+        case 'public':
+          return comment.type === 'public';
+        case 'private':
+          return comment.type === 'private';
+        default:
+          return true;
+      }
+    })();
+
+    return visibilityMatch && typeMatch;
   });
 
   if (loading) {
@@ -72,7 +116,7 @@ export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUse
     <div className="max-w-6xl mx-auto p-6">
       <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 space-y-4 lg:space-y-0">
           <div className="flex items-center space-x-3">
             {onBack && (
               <button
@@ -87,37 +131,78 @@ export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUse
           </div>
           
           {/* Filtros */}
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                filter === 'all'
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              Todos ({comments.length})
-            </button>
-            <button
-              onClick={() => setFilter('visible')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                filter === 'visible'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              Visibles ({comments.filter(c => !c.isHidden).length})
-            </button>
-            <button
-              onClick={() => setFilter('hidden')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                filter === 'hidden'
-                  ? 'bg-yellow-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              Ocultos ({comments.filter(c => c.isHidden).length})
-            </button>
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+            {/* Filtros de visibilidad */}
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-3 py-2 rounded-lg transition-colors text-sm ${
+                  filter === 'all'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Todos ({comments.length})
+              </button>
+              <button
+                onClick={() => setFilter('visible')}
+                className={`px-3 py-2 rounded-lg transition-colors text-sm ${
+                  filter === 'visible'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                <Eye className="w-4 h-4 inline mr-1" />
+                Visibles ({comments.filter(c => !c.isHidden).length})
+              </button>
+              <button
+                onClick={() => setFilter('hidden')}
+                className={`px-3 py-2 rounded-lg transition-colors text-sm ${
+                  filter === 'hidden'
+                    ? 'bg-yellow-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                <EyeOff className="w-4 h-4 inline mr-1" />
+                Ocultos ({comments.filter(c => c.isHidden).length})
+              </button>
+            </div>
+
+            {/* Filtros de tipo */}
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setTypeFilter('all')}
+                className={`px-3 py-2 rounded-lg transition-colors text-sm ${
+                  typeFilter === 'all'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Todos los tipos
+              </button>
+              <button
+                onClick={() => setTypeFilter('public')}
+                className={`px-3 py-2 rounded-lg transition-colors text-sm ${
+                  typeFilter === 'public'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                <Users className="w-4 h-4 inline mr-1" />
+                Públicos ({comments.filter(c => c.type === 'public').length})
+              </button>
+              <button
+                onClick={() => setTypeFilter('private')}
+                className={`px-3 py-2 rounded-lg transition-colors text-sm ${
+                  typeFilter === 'private'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                <Shield className="w-4 h-4 inline mr-1" />
+                Privados ({comments.filter(c => c.type === 'private').length})
+              </button>
+            </div>
           </div>
         </div>
 
@@ -161,6 +246,23 @@ export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUse
                             Admin
                           </span>
                         )}
+                        <span className={`px-2 py-1 rounded text-xs flex items-center space-x-1 ${
+                          comment.type === 'private' 
+                            ? 'bg-purple-600/20 text-purple-300'
+                            : 'bg-blue-600/20 text-blue-300'
+                        }`}>
+                          {comment.type === 'private' ? (
+                            <>
+                              <Shield className="w-3 h-3" />
+                              <span>Privado</span>
+                            </>
+                          ) : (
+                            <>
+                              <Users className="w-3 h-3" />
+                              <span>Público</span>
+                            </>
+                          )}
+                        </span>
                         {comment.isHidden && (
                           <span className="bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded text-xs">
                             Oculto
@@ -179,7 +281,7 @@ export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUse
                   <div className="flex space-x-2">
                     {comment.isHidden ? (
                       <button
-                        onClick={() => handleModerate(comment.id, false)}
+                        onClick={() => handleModerate(comment.id, false, comment.type)}
                         className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg transition-colors flex items-center space-x-1"
                       >
                         <Eye className="w-4 h-4" />
@@ -272,7 +374,7 @@ export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUse
 
               <div className="flex space-x-3">
                 <button
-                  onClick={() => handleModerate(selectedComment.id, true, moderationReason)}
+                  onClick={() => handleModerate(selectedComment.id, true, selectedComment.type, moderationReason)}
                   className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-lg transition-colors"
                 >
                   Ocultar Comentario
