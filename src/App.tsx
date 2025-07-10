@@ -272,6 +272,7 @@ function App() {
               onBack={handleBackToCatalog}
               onEdit={handleEditClick}
               onDelete={handleDeleteProfile}
+              onToggleLike={handleToggleLike}
               blurImages={blurImages}
             />
           )}
@@ -285,6 +286,7 @@ function App() {
                 setCurrentView('catalog');
                 setSelectedProfile(null);
               }}
+              onToggleLike={handleToggleLike}
               blurImages={blurImages}
             />
           )}

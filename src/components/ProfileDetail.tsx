@@ -30,6 +30,7 @@ interface ProfileDetailProps {
   onBack: () => void;
   onEdit?: (profile: Profile) => void;
   onDelete?: (profile: Profile) => void;
+  onToggleLike?: (profileId: string) => void;
   blurImages?: boolean;
 }
 
@@ -39,6 +40,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
   onBack,
   onEdit,
   onDelete,
+  onToggleLike,
   blurImages = false,
 }) => {
   const [showFullscreenSlider, setShowFullscreenSlider] = useState(false);
@@ -175,6 +177,13 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                   </div>
                 </div>
                 <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onToggleLike) {
+                      console.log('ProfileDetail: Click en like, perfil:', profile.id, 'isLiked:', profile.isLikedByCurrentUser);
+                      onToggleLike(profile.id);
+                    }
+                  }}
                   className={`relative p-3 rounded-full backdrop-blur-sm transition-all duration-300 ${
                     profile.isLikedByCurrentUser
                       ? "bg-red-600 text-white shadow-lg scale-110"
@@ -185,6 +194,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                       ? "Quitar me gusta"
                       : "Me gusta"
                   }
+                  disabled={!onToggleLike}
                 >
                   <Heart
                     className={`w-5 h-5 ${

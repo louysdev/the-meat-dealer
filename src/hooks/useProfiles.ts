@@ -67,11 +67,15 @@ export const useProfiles = (currentUserId?: string) => {
   const toggleLike = async (profileId: string) => {
     try {
       setError(null);
+      console.log('Hook: Toggle like para perfil:', profileId, 'Usuario:', currentUserId);
+      
       if (!currentUserId) {
         throw new Error('Usuario no autenticado');
       }
 
       const { isLiked, likesCount } = await profileService.toggleLike(profileId, currentUserId);
+      
+      console.log('Hook: Resultado del toggle like:', { isLiked, likesCount });
       
       setProfiles(prev => prev.map(p => 
         p.id === profileId ? { 
@@ -80,13 +84,17 @@ export const useProfiles = (currentUserId?: string) => {
           likesCount: likesCount
         } : p
       ));
+      
+      console.log('Hook: Estado actualizado en el frontend');
     } catch (err) {
+      console.error('Hook: Error en toggle like:', err);
       setError(err instanceof Error ? err.message : 'Error actualizando like');
       throw err;
     }
   };
 
   useEffect(() => {
+    console.log('Hook: Cargando perfiles para usuario:', currentUserId);
     loadProfiles();
   }, [currentUserId]);
 

@@ -160,6 +160,8 @@ const base64ToFile = (base64: string, fileName: string): File => {
 // Obtener todos los perfiles
 export const getProfiles = async (currentUserId?: string): Promise<Profile[]> => {
   try {
+    console.log('Obteniendo perfiles para usuario:', currentUserId);
+    
     // Obtener perfiles
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
@@ -212,8 +214,11 @@ export const getProfiles = async (currentUserId?: string): Promise<Profile[]> =>
       `);
 
     if (likesError) {
+      console.error('Error obteniendo likes:', likesError);
       throw new Error(`Error obteniendo likes: ${likesError.message}`);
     }
+
+    console.log('Likes obtenidos de la BD:', likes?.length || 0);
 
     // Agrupar media por perfil
     const mediaByProfile = (media || []).reduce((acc, item) => {
@@ -238,6 +243,11 @@ export const getProfiles = async (currentUserId?: string): Promise<Profile[]> =>
       acc[like.profile_id].push(like as ProfileLike);
       return acc;
     }, {} as Record<string, ProfileLike[]>);
+
+    // Log para debugging
+    Object.keys(likesByProfile).forEach(profileId => {
+      console.log(`Perfil ${profileId}: ${likesByProfile[profileId].length} likes`);
+    });
 
     // Convertir y combinar datos
     return profiles.map(profile => 
@@ -488,6 +498,8 @@ export const deleteProfile = async (profileId: string): Promise<void> => {
 // Dar o quitar like a un perfil
 export const toggleLike = async (profileId: string, userId: string): Promise<{ isLiked: boolean; likesCount: number }> => {
   try {
+    console.log('Toggle like - Perfil:', profileId, 'Usuario:', userId);
+    
     // Verificar si ya existe el like
     const { data: existingLike, error: checkError } = await supabase
       .from('profile_likes')
@@ -497,8 +509,11 @@ export const toggleLike = async (profileId: string, userId: string): Promise<{ i
       .maybeSingle();
 
     if (checkError) {
+      console.error('Error verificando like existente:', checkError);
       throw new Error(`Error verificando like: ${checkError.message}`);
     }
+
+    console.log('Like existente:', existingLike);
 
     let isLiked: boolean;
 
@@ -510,8 +525,10 @@ export const toggleLike = async (profileId: string, userId: string): Promise<{ i
         .eq('id', existingLike.id);
 
       if (deleteError) {
+        console.error('Error eliminando like:', deleteError);
         throw new Error(`Error eliminando like: ${deleteError.message}`);
       }
+      console.log('Like eliminado exitosamente');
       isLiked = false;
     } else {
       // No existe el like, crearlo
@@ -523,8 +540,10 @@ export const toggleLike = async (profileId: string, userId: string): Promise<{ i
         }]);
 
       if (insertError) {
+        console.error('Error agregando like:', insertError);
         throw new Error(`Error agregando like: ${insertError.message}`);
       }
+      console.log('Like agregado exitosamente');
       isLiked = true;
     }
 
@@ -535,10 +554,12 @@ export const toggleLike = async (profileId: string, userId: string): Promise<{ i
       .eq('profile_id', profileId);
 
     if (countError) {
+      console.error('Error obteniendo conteo actualizado:', countError);
       throw new Error(`Error obteniendo conteo de likes: ${countError.message}`);
     }
 
     const likesCount = likesData?.length || 0;
+    console.log('Conteo actualizado de likes:', likesCount);
 
     return { isLiked, likesCount };
   } catch (error) {

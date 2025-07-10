@@ -18,6 +18,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 }) => {
   const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log('ProfileCard: Click en like, perfil:', profile.id, 'isLiked:', profile.isLikedByCurrentUser);
     onToggleLike(profile.id);
   };
 
