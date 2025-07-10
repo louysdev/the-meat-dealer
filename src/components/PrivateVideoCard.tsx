@@ -47,6 +47,14 @@ export const PrivateVideoCard: React.FC<PrivateVideoCardProps> = ({
           <h3 className="text-xl font-bold text-white mb-1">
             {profile.name}
           </h3>
+          {profile.mainProfile && (
+            <div className="flex items-center space-x-2 mb-2">
+              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <span className="text-blue-300 text-sm">
+                Relacionado con {profile.mainProfile.name}
+              </span>
+            </div>
+          )}
           {profile.description && (
             <p className="text-gray-300 text-sm line-clamp-2">
               {profile.description}
@@ -91,6 +99,20 @@ export const PrivateVideoCard: React.FC<PrivateVideoCardProps> = ({
               {profile.bodySize}
             </span>
           </div>
+
+          {/* Perfil relacionado */}
+          {profile.mainProfile && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-400">Perfil base:</span>
+              <div className="text-right">
+                <div className="text-blue-300 font-medium">{profile.mainProfile.name}</div>
+                <div className="text-gray-400 text-xs">
+                  {profile.mainProfile.age} años
+                  {profile.mainProfile.residence && ` • ${profile.mainProfile.residence}`}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Creado por */}
           {profile.createdBy && (

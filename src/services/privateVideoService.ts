@@ -21,6 +21,13 @@ const convertDatabasePrivateVideoProfile = (
   name: dbProfile.name,
   description: dbProfile.description,
   bodySize: dbProfile.body_size,
+  mainProfileId: dbProfile.main_profile_id,
+  mainProfile: dbProfile.main_profile ? {
+    id: dbProfile.main_profile.id,
+    name: `${dbProfile.main_profile.first_name} ${dbProfile.main_profile.last_name}`,
+    age: dbProfile.main_profile.age,
+    residence: dbProfile.main_profile.residence
+  } : undefined,
   createdAt: new Date(dbProfile.created_at),
   updatedAt: new Date(dbProfile.updated_at),
   createdBy: dbProfile.created_by_user ? {
@@ -53,6 +60,13 @@ export const getPrivateVideoProfiles = async (currentUserId?: string): Promise<P
       .from('private_video_profiles')
       .select(`
         *,
+        main_profile:main_profile_id(
+          id,
+          first_name,
+          last_name,
+          age,
+          residence
+        ),
         created_by_user:created_by(
           id,
           full_name,
@@ -144,6 +158,7 @@ export const createPrivateVideoProfile = async (
         name: profileData.name,
         description: profileData.description,
         body_size: profileData.bodySize,
+        main_profile_id: profileData.mainProfileId,
         created_by: createdBy
       }])
       .select()
@@ -536,6 +551,178 @@ export const createPrivateVideoComment = async (
     };
   } catch (error) {
     console.error('Error en createPrivateVideoComment:', error);
+    throw error;
+  }
+};
+
+// Subir video privado
+export const uploadPrivateVideo = async (
+  videoData: CreatePrivateVideoData,
+  uploadedBy: string
+): Promise<PrivateVideo> => {
+  try {
+    // Subir archivo de video
+    const videoExt = videoData.videoFile.name.split('.').pop();
+    const videoFileName = `${videoData.profileId}/${Date.now()}.${videoExt}`;
+    
+    const { data: videoUpload, error: videoError } = await supabase.storage
+      .from('private-videos')
+      .upload(videoFileName, videoData.videoFile);
+
+    if (videoError) {
+      throw new Error(`Error subiendo video: ${videoError.message}`);
+    }
+
+    const { data: { publicUrl: videoUrl } } = supabase.storage
+      .from('private-videos')
+      .getPublicUrl(videoFileName);
+
+    // Subir thumbnail si existe
+    let thumbnailUrl: string | undefined;
+    if (videoData.thumbnailFile) {
+      const thumbExt = videoData.thumbnailFile.name.split('.').pop();
+      const thumbFileName = `${videoData.profileId}/thumb_${Date.now()}.${thumbExt}`;
+      
+      const { data: thumbUpload, error: thumbError } = await supabase.storage
+        .from('private-photos')
+        .upload(thumbFileName, videoData.thumbnailFile);
+
+      if (!thumbError) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('private-photos')
+          .getPublicUrl(thumbFileName);
+        thumbnailUrl = publicUrl;
+      }
+    }
+
+    // Obtener el siguiente orden
+    const { data: lastVideo } = await supabase
+      .from('private_videos')
+      .select('video_order')
+      .eq('profile_id', videoData.profileId)
+      .order('video_order', { ascending: false })
+      .limit(1)
+      .single();
+
+    const nextOrder = (lastVideo?.video_order || 0) + 1;
+
+    // Crear registro en la base de datos
+    const { data: video, error: dbError } = await supabase
+      .from('private_videos')
+      .insert([{
+        profile_id: videoData.profileId,
+        title: videoData.title,
+        video_url: videoUrl,
+        thumbnail_url: thumbnailUrl,
+        video_order: nextOrder,
+        uploaded_by: uploadedBy
+      }])
+      .select()
+      .single();
+
+    if (dbError) {
+      throw new Error(`Error guardando video: ${dbError.message}`);
+    }
+
+    return {
+      id: video.id,
+      profileId: video.profile_id,
+      title: video.title,
+      videoUrl: video.video_url,
+      thumbnailUrl: video.thumbnail_url,
+      durationSeconds: video.duration_seconds,
+      fileSizeMb: video.file_size_mb,
+      videoOrder: video.video_order,
+      createdAt: new Date(video.created_at)
+    };
+  } catch (error) {
+    console.error('Error en uploadPrivateVideo:', error);
+    throw error;
+  }
+};
+
+// Subir foto privada
+export const uploadPrivatePhoto = async (
+  photoData: CreatePrivatePhotoData,
+  uploadedBy: string
+): Promise<PrivatePhoto> => {
+  try {
+    // Subir archivo de foto
+    const photoExt = photoData.photoFile.name.split('.').pop();
+    const photoFileName = `${photoData.profileId}/${Date.now()}.${photoExt}`;
+    
+    const { data: photoUpload, error: photoError } = await supabase.storage
+      .from('private-photos')
+      .upload(photoFileName, photoData.photoFile);
+
+    if (photoError) {
+      throw new Error(`Error subiendo foto: ${photoError.message}`);
+    }
+
+    const { data: { publicUrl: photoUrl } } = supabase.storage
+      .from('private-photos')
+      .getPublicUrl(photoFileName);
+
+    // Obtener el siguiente orden
+    const { data: lastPhoto } = await supabase
+      .from('private_photos')
+      .select('photo_order')
+      .eq('profile_id', photoData.profileId)
+      .order('photo_order', { ascending: false })
+      .limit(1)
+      .single();
+
+    const nextOrder = (lastPhoto?.photo_order || 0) + 1;
+
+    // Crear registro en la base de datos
+    const { data: photo, error: dbError } = await supabase
+      .from('private_photos')
+      .insert([{
+        profile_id: photoData.profileId,
+        photo_url: photoUrl,
+        photo_order: nextOrder,
+        uploaded_by: uploadedBy
+      }])
+      .select()
+      .single();
+
+    if (dbError) {
+      throw new Error(`Error guardando foto: ${dbError.message}`);
+    }
+
+    return {
+      id: photo.id,
+      profileId: photo.profile_id,
+      photoUrl: photo.photo_url,
+      photoOrder: photo.photo_order,
+      createdAt: new Date(photo.created_at)
+    };
+  } catch (error) {
+    console.error('Error en uploadPrivatePhoto:', error);
+    throw error;
+  }
+};
+
+// Obtener perfiles del catálogo principal para selección
+export const getMainProfiles = async (): Promise<{ id: string; name: string; age: number; residence?: string }[]> => {
+  try {
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name, age, residence')
+      .order('first_name');
+
+    if (error) {
+      throw new Error(`Error obteniendo perfiles principales: ${error.message}`);
+    }
+
+    return (profiles || []).map(profile => ({
+      id: profile.id,
+      name: `${profile.first_name} ${profile.last_name}`,
+      age: profile.age,
+      residence: profile.residence
+    }));
+  } catch (error) {
+    console.error('Error en getMainProfiles:', error);
     throw error;
   }
 };

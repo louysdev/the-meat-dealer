@@ -13,11 +13,13 @@ import { LoginForm } from './components/LoginForm';
 import { CommentModeration } from './components/CommentModeration';
 import { PrivateVideoCatalog } from './components/PrivateVideoCatalog';
 import { PrivateVideoDetail } from './components/PrivateVideoDetail';
+import { CreatePrivateVideoProfileForm } from './components/CreatePrivateVideoProfileForm';
 import { Profile } from './types';
 import { useProfiles } from './hooks/useProfiles';
 import { usePrivateVideos } from './hooks/usePrivateVideos';
 import { useModal } from './hooks/useModal';
 import { useAuth } from './hooks/useAuth';
+import { createPrivateVideoProfile } from './services/privateVideoService';
 
 // Declaraciones de tipo para las funciones de window
 declare global {
@@ -27,7 +29,7 @@ declare global {
   }
 }
 
-type View = 'catalog' | 'add' | 'detail' | 'edit' | 'shared-profile' | 'user-management' | 'comment-moderation' | 'private-videos' | 'private-video-detail';
+type View = 'catalog' | 'add' | 'detail' | 'edit' | 'shared-profile' | 'user-management' | 'comment-moderation' | 'private-videos' | 'private-video-detail' | 'create-private-profile';
 
 function App() {
   const { currentUser, isAuthenticated, isLoading: authLoading, login, logout } = useAuth();
@@ -223,6 +225,28 @@ function App() {
     setCurrentView('private-video-detail');
   };
 
+  const handleCreatePrivateProfile = () => {
+    setCurrentView('create-private-profile');
+    setSelectedProfile(null);
+    setSelectedPrivateProfile(null);
+  };
+
+  const handleCreatePrivateProfileSubmit = async (profileData: any) => {
+    try {
+      await createPrivateVideoProfile(profileData, currentUser?.id || '');
+      setCurrentView('private-videos');
+      showSuccess(
+        '¡Perfil Privado Creado!',
+        'El perfil de videos privados se ha creado exitosamente.'
+      );
+    } catch (error) {
+      showError(
+        'Error al Crear',
+        'No se pudo crear el perfil privado. Por favor intenta de nuevo.'
+      );
+    }
+  };
+
   const handleLogout = () => {
     showConfirm(
       'Cerrar Sesión',
@@ -329,6 +353,7 @@ function App() {
             <PrivateVideoCatalog 
               profiles={privateProfiles}
               onProfileClick={handlePrivateVideoClick}
+              onCreateProfile={handleCreatePrivateProfile}
               currentUserRole={currentUser?.role}
             />
           )}
@@ -338,6 +363,14 @@ function App() {
               profile={selectedPrivateProfile}
               currentUser={currentUser}
               onBack={() => setCurrentView('private-videos')}
+            />
+          )}
+
+          {currentView === 'create-private-profile' && currentUser && (
+            <CreatePrivateVideoProfileForm 
+              onSubmit={handleCreatePrivateProfileSubmit}
+              onCancel={() => setCurrentView('private-videos')}
+              currentUserId={currentUser.id}
             />
           )}
         </main>

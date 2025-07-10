@@ -103,6 +103,13 @@ export interface PrivateVideoProfile {
   name: string;
   description: string;
   bodySize: 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL';
+  mainProfileId?: string; // Relación con perfil del catálogo principal
+  mainProfile?: {
+    id: string;
+    name: string;
+    age: number;
+    residence?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
   createdBy?: User;
@@ -172,10 +179,23 @@ export interface CreatePrivateVideoProfileData {
   name: string;
   description: string;
   bodySize: 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL';
+  mainProfileId?: string;
 }
 
 export interface CreatePrivateVideoCommentData {
   profileId: string;
   content: string;
   parentCommentId?: string;
+}
+
+export interface CreatePrivateVideoData {
+  profileId: string;
+  title: string;
+  videoFile: File;
+  thumbnailFile?: File;
+}
+
+export interface CreatePrivatePhotoData {
+  profileId: string;
+  photoFile: File;
 }

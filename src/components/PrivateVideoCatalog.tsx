@@ -6,7 +6,7 @@ import { PrivateVideoCard } from './PrivateVideoCard';
 interface PrivateVideoCatalogProps {
   profiles: PrivateVideoProfile[];
   onProfileClick: (profile: PrivateVideoProfile) => void;
-  onCreateProfile?: () => void;
+  onCreateProfile: () => void;
   currentUserRole?: 'admin' | 'user';
 }
 
@@ -102,7 +102,7 @@ export const PrivateVideoCatalog: React.FC<PrivateVideoCatalogProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             {/* Create Profile Button (solo admins) */}
-            {currentUserRole === 'admin' && onCreateProfile && (
+            {currentUserRole === 'admin' && (
               <button
                 onClick={onCreateProfile}
                 className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
