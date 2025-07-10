@@ -148,12 +148,12 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
           <div className="space-y-6">
             {/* Header */}
             <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 border border-gray-700">
-              <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-start justify-between gap-4 mb-2">
                 <div className="min-w-0 flex-1">
                   <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 leading-tight">
                     {profile.firstName} {profile.lastName}
                   </h1>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-300 mb-3">
+                  <div className="flex flex-row sm:items-center gap-2 sm:gap-4 text-gray-300 mb-3">
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
                       <span>{profile.age} años</span>
@@ -239,7 +239,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
               </div>
 
               {/* Media count and creation date */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-gray-400 text-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 text-gray-400 text-sm">
                 <div className="flex items-center space-x-1">
                   <Camera className="w-4 h-4 rotate-180" />
                   <span>
@@ -250,7 +250,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 min-w-0 flex-1">
+                <div className="flex flex-row sm:items-center gap-2 sm:gap-2 min-w-0 flex-1">
                   {profile.instagram && (
                     <a
                       href={`https://instagram.com/${profile.instagram.replace(

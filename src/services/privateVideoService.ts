@@ -1020,6 +1020,10 @@ export const getPrivateVideoCommentsForModeration = async (): Promise<PrivateVid
           createdAt: new Date(comment.created_at),
           updatedAt: new Date(comment.updated_at),
           user: convertDatabaseUser(comment.user),
+          profile: comment.profile ? {
+            id: comment.profile.id,
+            name: comment.profile.name
+          } : undefined,
           likesCount,
           dislikesCount,
           repliesCount: repliesCount || 0,

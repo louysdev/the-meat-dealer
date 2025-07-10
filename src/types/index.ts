@@ -73,6 +73,11 @@ export interface Comment {
   createdAt: Date;
   updatedAt: Date;
   user: User;
+  profile?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  };
   likesCount: number;
   dislikesCount: number;
   repliesCount: number;
@@ -171,6 +176,10 @@ export interface PrivateVideoComment {
   createdAt: Date;
   updatedAt: Date;
   user: User;
+  profile?: {
+    id: string;
+    name: string;
+  };
   likesCount: number;
   dislikesCount: number;
   repliesCount: number;
