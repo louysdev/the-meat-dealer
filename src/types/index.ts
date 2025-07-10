@@ -57,6 +57,39 @@ export interface User {
   createdBy?: string; // ID del admin que creó el usuario
 }
 
+export interface Comment {
+  id: string;
+  profileId: string;
+  userId: string;
+  parentCommentId?: string;
+  content: string;
+  isDeleted: boolean;
+  isHidden: boolean;
+  isEdited: boolean;
+  hiddenReason?: string;
+  hiddenBy?: string;
+  hiddenAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  user: User;
+  likesCount: number;
+  dislikesCount: number;
+  repliesCount: number;
+  userLikeStatus?: 'like' | 'dislike' | null; // Estado del like del usuario actual
+  replies?: Comment[]; // Respuestas anidadas
+}
+
+export interface CreateCommentData {
+  profileId: string;
+  content: string;
+  parentCommentId?: string;
+}
+
+export interface CommentModerationData {
+  isHidden: boolean;
+  hiddenReason?: string;
+}
+
 export interface CreateUserData {
   fullName: string;
   username: string;
