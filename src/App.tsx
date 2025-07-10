@@ -296,6 +296,12 @@ function App() {
               currentUser={currentUser}
             />
           )}
+
+          {currentView === 'comment-moderation' && currentUser && (
+            <CommentModeration 
+              currentUser={currentUser}
+            />
+          )}
       </div>
 
       {/* Modal Global */}

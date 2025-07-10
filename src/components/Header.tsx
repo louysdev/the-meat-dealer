@@ -134,6 +134,20 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
+          {currentUser?.role === "admin" && onCommentModeration && (
+            <button
+              onClick={() => handleMenuItemClick(onCommentModeration)}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all duration-300 text-white hover:bg-white/10 ${
+                currentView === "comment-moderation"
+                  ? "bg-red-600 shadow-lg"
+                  : "text-white hover:bg-white/10"
+              }`}
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span>Moderación de Comentarios</span>
+            </button>
+          )}
+
           {/* Logout Button */}
           {onLogout && (
             <button

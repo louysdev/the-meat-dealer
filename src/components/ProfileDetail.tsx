@@ -486,6 +486,9 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
             )}
           </div>
         </div>
+
+        {/* Sección de comentarios */}
+        <CommentsSection profileId={profile.id} currentUser={currentUser} />
       </div>
 
       {/* Fullscreen Media Slider */}
