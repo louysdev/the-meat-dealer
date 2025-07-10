@@ -6,12 +6,10 @@ import {
   Calendar,
   Instagram,
   DollarSign,
-  Briefcase,
   Home,
   User,
   Music,
   MapPin as Location,
-  Grid3X3,
   Edit,
   Trash2,
   Clock,
@@ -45,7 +43,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
   blurImages = false,
 }) => {
   const [showFullscreenSlider, setShowFullscreenSlider] = useState(false);
-  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
 
   // Verificar permisos de edición/eliminación
   const canEdit = () => {
@@ -57,9 +54,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
     // Los usuarios solo pueden editar perfiles que ellos crearon
     if (profile.createdByUser?.id === currentUser.id) return true;
     
-    // Para perfiles legacy sin createdByUser, permitir edición solo a admins
-    if (!profile.createdByUser && currentUser.role === 'admin') return true;
-    
     return false;
   };
 
@@ -68,11 +62,6 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
     ...profile.photos.map((url) => ({ url, type: "photo" as const })),
     ...profile.videos.map((url) => ({ url, type: "video" as const })),
   ];
-
-  const handleMediaClick = (index: number) => {
-    setSelectedMediaIndex(index);
-    setShowFullscreenSlider(true);
-  };
 
   const handleEditClick = () => {
     if (onEdit) {
@@ -277,8 +266,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                     </a>
                   )}
                   <div
-                    className="flex-shrink-0"
-                    className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
+                    className={`flex-shrink-0 flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
                       profile.isAvailable !== false
                         ? "bg-green-600/20 text-green-300 border border-green-600/30"
                         : "bg-red-600/20 text-red-300 border border-red-600/30"
