@@ -159,12 +159,12 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
           <div className="space-y-6">
             {/* Header */}
             <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 border border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 leading-tight">
                     {profile.firstName} {profile.lastName}
                   </h1>
-                  <div className="flex items-center space-x-4 text-gray-300">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-300">
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
                       <span>{profile.age} años</span>
@@ -185,7 +185,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                       onToggleLike(profile.id);
                     }
                   }}
-                  className={`relative p-3 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                  className={`relative p-3 rounded-full backdrop-blur-sm transition-all duration-300 flex-shrink-0 ${
                     profile.isLikedByCurrentUser
                       ? "bg-red-600 text-white shadow-lg scale-110"
                       : "bg-gray-800/50 text-gray-300 hover:bg-red-600/70 hover:text-white border border-gray-600 hover:border-red-500"
@@ -211,7 +211,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
               </div>
 
               {/* Media count and creation date */}
-              <div className="flex items-center justify-between mb-4 text-gray-400 text-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-gray-400 text-sm">
                 <div className="flex items-center space-x-1">
                   <Camera className="w-4 h-4 rotate-180" />
                   <span>
@@ -221,8 +221,8 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4 justify-between pt-2">
-                <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 min-w-0 flex-1">
                   {profile.instagram && (
                     <a
                       href={`https://instagram.com/${profile.instagram.replace(
@@ -231,13 +231,14 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-4 py-2 rounded-full hover:from-pink-700 hover:to-purple-700 transition-colors"
+                      className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full hover:from-pink-700 hover:to-purple-700 transition-colors text-sm sm:text-base min-w-0"
                     >
                       <Instagram className="w-4 h-4" />
-                      <span>{profile.instagram}</span>
+                      <span className="truncate">{profile.instagram}</span>
                     </a>
                   )}
                   <div
+                    className="flex-shrink-0"
                     className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
                       profile.isAvailable !== false
                         ? "bg-green-600/20 text-green-300 border border-green-600/30"
@@ -256,7 +257,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4 mt-4 justify-between *:text-gray-400">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-4 text-gray-400 text-sm">
                 {profile.createdByUser && (
                   <div className="flex items-center space-x-1">
                     <User className="w-4 h-4" />

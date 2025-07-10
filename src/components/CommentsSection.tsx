@@ -56,62 +56,62 @@ const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   return (
-    <div className={`${isReply ? 'ml-8 border-l-2 border-gray-700 pl-4' : ''} mb-4`}>
-      <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+    <div className={`${isReply ? 'ml-4 sm:ml-8 border-l-2 border-gray-700 pl-2 sm:pl-4' : ''} mb-4`}>
+      <div className="bg-gray-800/50 rounded-lg p-3 sm:p-4 border border-gray-700">
         {/* Header del comentario */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">
+        <div className="flex items-start justify-between mb-3 gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-bold text-xs sm:text-sm">
                 {comment.user.fullName.charAt(0).toUpperCase()}
               </span>
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-white font-medium">{comment.user.fullName}</span>
-                <span className="text-gray-400 text-sm">@{comment.user.username}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <span className="text-white font-medium text-sm sm:text-base truncate">{comment.user.fullName}</span>
+                <span className="text-gray-400 text-xs sm:text-sm truncate">@{comment.user.username}</span>
                 {comment.user.role === 'admin' && (
-                  <span className="bg-purple-600/20 text-purple-300 px-2 py-1 rounded text-xs">
+                  <span className="bg-purple-600/20 text-purple-300 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs flex-shrink-0">
                     Admin
                   </span>
                 )}
                 {comment.isEdited && (
-                  <span className="text-gray-500 text-xs">(editado)</span>
+                  <span className="text-gray-500 text-xs flex-shrink-0">(editado)</span>
                 )}
               </div>
-              <div className="text-gray-400 text-xs">
+              <div className="text-gray-400 text-xs sm:text-sm">
                 {getTimeAgo(comment.createdAt)}
               </div>
             </div>
           </div>
 
           {/* Acciones del comentario */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
             {canModerate && (
               <button
                 onClick={() => setShowModerationModal(true)}
-                className="p-1 text-yellow-400 hover:text-yellow-300 transition-colors"
+                className="p-1 text-yellow-400 hover:text-yellow-300 transition-colors text-xs sm:text-sm"
                 title="Moderar comentario"
               >
-                <Flag className="w-4 h-4" />
+                <Flag className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             )}
             {canEdit && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
+                className="p-1 text-blue-400 hover:text-blue-300 transition-colors text-xs sm:text-sm"
                 title="Editar comentario"
               >
-                <Edit className="w-4 h-4" />
+                <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             )}
             {canDelete && (
               <button
                 onClick={() => onDelete(comment.id)}
-                className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                className="p-1 text-red-400 hover:text-red-300 transition-colors text-xs sm:text-sm"
                 title="Eliminar comentario"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             )}
           </div>
@@ -123,23 +123,23 @@ const CommentItem: React.FC<CommentItemProps> = ({
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-red-500 text-sm sm:text-base"
               rows={3}
               maxLength={1000}
             />
-            <div className="flex justify-end space-x-2 mt-2">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2 mt-2">
               <button
                 onClick={() => {
                   setIsEditing(false);
                   setEditContent(comment.content);
                 }}
-                className="px-3 py-1 text-gray-400 hover:text-white transition-colors"
+                className="px-3 py-1 text-gray-400 hover:text-white transition-colors text-sm order-2 sm:order-1"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleEdit}
-                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition-colors text-sm order-1 sm:order-2"
               >
                 Guardar
               </button>
@@ -147,35 +147,35 @@ const CommentItem: React.FC<CommentItemProps> = ({
           </div>
         ) : (
           <div className="mb-3">
-            <p className="text-gray-300 whitespace-pre-wrap">{comment.content}</p>
+            <p className="text-gray-300 whitespace-pre-wrap text-sm sm:text-base leading-relaxed">{comment.content}</p>
           </div>
         )}
 
         {/* Acciones de interacción */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Likes y Dislikes */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               <button
                 onClick={() => onToggleLike(comment.id, true)}
-                className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+                className={`flex items-center space-x-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded transition-colors text-xs sm:text-sm ${
                   comment.userLikeStatus === 'like'
                     ? 'bg-green-600/20 text-green-300'
                     : 'text-gray-400 hover:text-green-300 hover:bg-green-600/10'
                 }`}
               >
-                <ThumbsUp className="w-4 h-4" />
+                <ThumbsUp className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="text-sm">{comment.likesCount}</span>
               </button>
               <button
                 onClick={() => onToggleLike(comment.id, false)}
-                className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+                className={`flex items-center space-x-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded transition-colors text-xs sm:text-sm ${
                   comment.userLikeStatus === 'dislike'
                     ? 'bg-red-600/20 text-red-300'
                     : 'text-gray-400 hover:text-red-300 hover:bg-red-600/10'
                 }`}
               >
-                <ThumbsDown className="w-4 h-4" />
+                <ThumbsDown className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="text-sm">{comment.dislikesCount}</span>
               </button>
             </div>
@@ -184,9 +184,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
             {!isReply && currentUser && (
               <button
                 onClick={() => onReply(comment.id)}
-                className="flex items-center space-x-1 text-gray-400 hover:text-blue-300 transition-colors"
+                className="flex items-center space-x-1 text-gray-400 hover:text-blue-300 transition-colors text-xs sm:text-sm"
               >
-                <Reply className="w-4 h-4" />
+                <Reply className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="text-sm">Responder</span>
               </button>
             )}
@@ -194,7 +194,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
           {/* Contador de respuestas */}
           {comment.repliesCount > 0 && (
-            <span className="text-gray-400 text-sm">
+            <span className="text-gray-400 text-xs sm:text-sm">
               {comment.repliesCount} respuesta{comment.repliesCount !== 1 ? 's' : ''}
             </span>
           )}
