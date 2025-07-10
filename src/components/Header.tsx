@@ -11,6 +11,7 @@ import {
   Heart,
   HeartPulse,
   MessageCircle,
+  Shield,
 } from "lucide-react";
 import { User } from "../types";
 
@@ -28,6 +29,7 @@ interface HeaderProps {
   currentUser?: User | null;
   onUserManagement?: () => void;
   onCommentModeration?: () => void;
+  onPrivateVideos?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -37,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   currentUser,
   onUserManagement,
   onCommentModeration,
+  onPrivateVideos,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
@@ -122,6 +125,18 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Plus className="w-5 h-5" />
             <span>Agregar Perfil</span>
+          </button>
+
+          <button
+            onClick={() => handleMenuItemClick(() => onPrivateVideos && onPrivateVideos())}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all duration-300 text-white hover:bg-white/10 ${
+              currentView === "private-videos"
+                ? "bg-red-600 shadow-lg"
+                : "text-white hover:bg-white/10"
+            }`}
+          >
+            <Shield className="w-5 h-5" />
+            <span>Videos Privados</span>
           </button>
 
           {currentUser?.role === "admin" && onUserManagement && (

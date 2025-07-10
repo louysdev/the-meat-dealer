@@ -11,8 +11,11 @@ import { ErrorMessage } from './components/ErrorMessage';
 import { Modal } from './components/Modal';
 import { LoginForm } from './components/LoginForm';
 import { CommentModeration } from './components/CommentModeration';
+import { PrivateVideoCatalog } from './components/PrivateVideoCatalog';
+import { PrivateVideoDetail } from './components/PrivateVideoDetail';
 import { Profile } from './types';
 import { useProfiles } from './hooks/useProfiles';
+import { usePrivateVideos } from './hooks/usePrivateVideos';
 import { useModal } from './hooks/useModal';
 import { useAuth } from './hooks/useAuth';
 
@@ -24,7 +27,7 @@ declare global {
   }
 }
 
-type View = 'catalog' | 'add' | 'detail' | 'edit' | 'shared-profile' | 'user-management' | 'comment-moderation';
+type View = 'catalog' | 'add' | 'detail' | 'edit' | 'shared-profile' | 'user-management' | 'comment-moderation' | 'private-videos' | 'private-video-detail';
 
 function App() {
   const { currentUser, isAuthenticated, isLoading: authLoading, login, logout } = useAuth();
@@ -39,10 +42,17 @@ function App() {
     toggleLike
   } = useProfiles(currentUser?.id);
 
+  const {
+    profiles: privateProfiles,
+    loading: privateLoading,
+    error: privateError
+  } = usePrivateVideos(currentUser?.id);
+
   const { modal, hideModal, showSuccess, showError, showConfirm } = useModal();
 
   const [currentView, setCurrentView] = useState<View>('catalog');
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [selectedPrivateProfile, setSelectedPrivateProfile] = useState<any>(null);
   const [blurImages, setBlurImages] = useState(false);
 
   // Manejar URLs compartidas
@@ -183,6 +193,7 @@ function App() {
   const handleBackToCatalog = () => {
     setCurrentView('catalog');
     setSelectedProfile(null);
+    setSelectedPrivateProfile(null);
     
     // Restablecer meta tags al estado original
     if (window.resetMetaTags) {
@@ -198,6 +209,18 @@ function App() {
   const handleCommentModeration = () => {
     setCurrentView('comment-moderation');
     setSelectedProfile(null);
+    setSelectedPrivateProfile(null);
+  };
+
+  const handlePrivateVideos = () => {
+    setCurrentView('private-videos');
+    setSelectedProfile(null);
+    setSelectedPrivateProfile(null);
+  };
+
+  const handlePrivateVideoClick = (profile: any) => {
+    setSelectedPrivateProfile(profile);
+    setCurrentView('private-video-detail');
   };
 
   const handleLogout = () => {
@@ -223,6 +246,7 @@ function App() {
             currentUser={currentUser}
             onUserManagement={handleUserManagement}
             onLogout={handleLogout}
+            onPrivateVideos={handlePrivateVideos}
           />
           <LoadingSpinner />
         </div>
@@ -296,6 +320,22 @@ function App() {
               }}
               onToggleLike={handleToggleLike}
               blurImages={blurImages}
+            />
+          )}
+
+          {currentView === 'private-videos' && (
+            <PrivateVideoCatalog 
+              profiles={privateProfiles}
+              onProfileClick={handlePrivateVideoClick}
+              currentUserRole={currentUser?.role}
+            />
+          )}
+
+          {currentView === 'private-video-detail' && selectedPrivateProfile && (
+            <PrivateVideoDetail 
+              profile={selectedPrivateProfile}
+              currentUser={currentUser}
+              onBack={() => setCurrentView('private-videos')}
             />
           )}
         </main>

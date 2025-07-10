@@ -96,3 +96,86 @@ export interface CreateUserData {
   password: string;
   role: 'admin' | 'user';
 }
+
+// Tipos para videos privados
+export interface PrivateVideoProfile {
+  id: string;
+  name: string;
+  description: string;
+  bodySize: 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL';
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy?: User;
+  videosCount: number;
+  photosCount: number;
+  totalDurationMinutes: number;
+  hasAccess: boolean;
+  canUpload: boolean;
+}
+
+export interface PrivateVideo {
+  id: string;
+  profileId: string;
+  title: string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  durationSeconds?: number;
+  fileSizeMb?: number;
+  videoOrder: number;
+  createdAt: Date;
+  uploadedBy?: User;
+}
+
+export interface PrivatePhoto {
+  id: string;
+  profileId: string;
+  photoUrl: string;
+  photoOrder: number;
+  createdAt: Date;
+  uploadedBy?: User;
+}
+
+export interface PrivateVideoAccess {
+  id: string;
+  userId: string;
+  profileId: string;
+  canView: boolean;
+  canUpload: boolean;
+  grantedBy?: User;
+  grantedAt: Date;
+  user: User;
+}
+
+export interface PrivateVideoComment {
+  id: string;
+  profileId: string;
+  userId: string;
+  parentCommentId?: string;
+  content: string;
+  isDeleted: boolean;
+  isHidden: boolean;
+  isEdited: boolean;
+  hiddenReason?: string;
+  hiddenBy?: string;
+  hiddenAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  user: User;
+  likesCount: number;
+  dislikesCount: number;
+  repliesCount: number;
+  userLikeStatus?: 'like' | 'dislike' | null;
+  replies?: PrivateVideoComment[];
+}
+
+export interface CreatePrivateVideoProfileData {
+  name: string;
+  description: string;
+  bodySize: 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL';
+}
+
+export interface CreatePrivateVideoCommentData {
+  profileId: string;
+  content: string;
+  parentCommentId?: string;
+}
