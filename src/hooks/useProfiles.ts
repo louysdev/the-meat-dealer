@@ -39,10 +39,13 @@ export const useProfiles = (currentUserId?: string) => {
   const updateProfile = async (updatedProfile: Profile) => {
     try {
       setError(null);
+      console.log('Hook: Iniciando actualización de perfil');
       const updated = await profileService.updateProfile(updatedProfile);
+      console.log('Hook: Perfil actualizado exitosamente');
       setProfiles(prev => prev.map(p => p.id === updated.id ? updated : p));
       return updated;
     } catch (err) {
+      console.error('Hook: Error actualizando perfil:', err);
       setError(err instanceof Error ? err.message : 'Error actualizando perfil');
       throw err;
     }

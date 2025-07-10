@@ -197,7 +197,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           {profile.createdByUser && (
             <div className="flex items-center justify-between text-xs">
               <div className="text-gray-400">
-                Creado por: <span className="text-blue-300">@{profile.createdByUser.username}</span>
+                Creado por: <span className="text-blue-300">@{profile.createdByUser?.username || 'Usuario'}</span>
               </div>
               {!profile.instagram && (
                 <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${

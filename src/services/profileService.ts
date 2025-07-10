@@ -70,7 +70,7 @@ const convertDatabaseProfileToProfile = (
     photos,
     videos,
     createdAt: new Date(dbProfile.created_at),
-    createdByUser: createdByUser ? {
+    createdByUser: createdByUser && createdByUser.id ? {
       id: createdByUser.id,
       fullName: createdByUser.full_name,
       username: createdByUser.username,
