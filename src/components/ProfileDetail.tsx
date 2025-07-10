@@ -22,6 +22,7 @@ import {
 import { Profile, User as UserType } from "../types";
 import { MediaSlider } from "./MediaSlider";
 import { ShareButton } from "./ShareButton";
+import { CommentsSection } from "./CommentsSection";
 import { getTimeAgo } from "../utils/dateUtils";
 
 interface ProfileDetailProps {
