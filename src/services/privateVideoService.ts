@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { base64ToFile } from '../utils/imageUtils';
 import { 
   PrivateVideoProfile, 
   PrivateVideo, 
@@ -7,7 +8,8 @@ import {
   PrivateVideoComment,
   CreatePrivateVideoProfileData,
   CreatePrivateVideoCommentData,
-  User 
+  User,
+  MediaItem
 } from '../types';
 
 // Convertir perfil de video privado de la base de datos
@@ -148,7 +150,7 @@ export const getPrivateVideoProfiles = async (currentUserId?: string): Promise<P
 
 // Crear nuevo perfil de video privado (solo admins)
 export const createPrivateVideoProfile = async (
-  profileData: CreatePrivateVideoProfileData,
+  profileData: CreatePrivateVideoProfileData & { media: MediaItem[] },
   createdBy: string
 ): Promise<PrivateVideoProfile> => {
   try {
@@ -166,6 +168,30 @@ export const createPrivateVideoProfile = async (
 
     if (error) {
       throw new Error(`Error creando perfil privado: ${error.message}`);
+    }
+
+    // Subir archivos de media si existen
+    if (profileData.media && profileData.media.length > 0) {
+      for (let i = 0; i < profileData.media.length; i++) {
+        const mediaItem = profileData.media[i];
+        
+        // Convertir base64 a File
+        const fileExt = mediaItem.type === 'photo' ? 'jpg' : 'mp4';
+        const file = base64ToFile(mediaItem.url, `${mediaItem.type}-${i}.${fileExt}`);
+        
+        if (mediaItem.type === 'photo') {
+          await uploadPrivatePhoto({
+            profileId: profile.id,
+            photoFile: file
+          }, createdBy);
+        } else if (mediaItem.type === 'video') {
+          await uploadPrivateVideo({
+            profileId: profile.id,
+            title: `Video ${i + 1}`,
+            videoFile: file
+          }, createdBy);
+        }
+      }
     }
 
     const stats = { videos_count: 0, photos_count: 0, total_duration_minutes: 0 };
@@ -556,7 +582,7 @@ export const createPrivateVideoComment = async (
 };
 
 // Subir video privado
-export const uploadPrivateVideo = async (
+const uploadPrivateVideo = async (
   videoData: CreatePrivateVideoData,
   uploadedBy: string
 ): Promise<PrivateVideo> => {
@@ -642,7 +668,7 @@ export const uploadPrivateVideo = async (
 };
 
 // Subir foto privada
-export const uploadPrivatePhoto = async (
+const uploadPrivatePhoto = async (
   photoData: CreatePrivatePhotoData,
   uploadedBy: string
 ): Promise<PrivatePhoto> => {

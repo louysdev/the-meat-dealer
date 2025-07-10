@@ -5,7 +5,7 @@ import { getMainProfiles } from '../services/privateVideoService';
 import { MediaUpload } from './MediaUpload';
 
 interface CreatePrivateVideoProfileFormProps {
-  onSubmit: (profileData: CreatePrivateVideoProfileData) => Promise<void>;
+  onSubmit: (profileData: CreatePrivateVideoProfileData & { media: MediaItem[] }) => Promise<void>;
   onCancel: () => void;
   currentUserId: string;
 }
@@ -109,7 +109,8 @@ export const CreatePrivateVideoProfileForm: React.FC<CreatePrivateVideoProfileFo
       // Preparar datos para envío
       const profileDataToSubmit = {
         ...formData,
-        mainProfileId: formData.mainProfileId === 'anonymous' ? undefined : formData.mainProfileId
+        mainProfileId: formData.mainProfileId === 'anonymous' ? undefined : formData.mainProfileId,
+        media
       };
 
       await onSubmit(profileDataToSubmit);

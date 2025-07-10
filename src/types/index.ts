@@ -180,6 +180,7 @@ export interface CreatePrivateVideoProfileData {
   description: string;
   bodySize: 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL';
   mainProfileId?: string;
+  media?: MediaItem[];
 }
 
 export interface CreatePrivateVideoCommentData {
