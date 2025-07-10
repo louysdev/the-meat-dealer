@@ -139,32 +139,32 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Media Section */}
           <div className="space-y-4">
-            {/* Media slider - responsive height */}
+            {/* Main media on mobile, hidden on desktop */}
             <div className="lg:hidden">
-              <div className="aspect-[4/5] sm:aspect-[3/4] rounded-2xl overflow-hidden">
+              <div className="aspect-[2/3] rounded-2xl overflow-hidden">
                 <MediaSlider media={allMedia} autoPlay={false} blurImages={blurImages} />
               </div>
             </div>
 
-            {/* Auto-sliding media on desktop - responsive height */}
-            <div className="hidden lg:block h-[500px] xl:h-[600px] rounded-2xl overflow-hidden">
+            {/* Auto-sliding media on desktop */}
+            <div className="hidden lg:block h-[600px] rounded-2xl overflow-hidden">
               <MediaSlider media={allMedia} autoPlay={true} interval={4000} blurImages={blurImages} />
             </div>
           </div>
 
           {/* Profile Information */}
-          <div className="space-y-4 lg:space-y-6">
+          <div className="space-y-6">
             {/* Header */}
-            <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-700">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 border border-gray-700">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                  <h1 className="text-3xl font-bold text-white mb-2">
                     {profile.firstName} {profile.lastName}
                   </h1>
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-300 text-sm sm:text-base">
+                  <div className="flex items-center space-x-4 text-gray-300">
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
                       <span>{profile.age} años</span>
@@ -211,7 +211,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
               </div>
 
               {/* Media count and creation date */}
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-4 text-gray-400 text-xs sm:text-sm">
+              <div className="flex items-center justify-between mb-4 text-gray-400 text-sm">
                 <div className="flex items-center space-x-1">
                   <Camera className="w-4 h-4 rotate-180" />
                   <span>
@@ -221,8 +221,8 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 sm:justify-between pt-2">
-                <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center space-x-4 justify-between pt-2">
+                <div className="flex items-center space-x-2">
                   {profile.instagram && (
                     <a
                       href={`https://instagram.com/${profile.instagram.replace(
@@ -231,7 +231,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full hover:from-pink-700 hover:to-purple-700 transition-colors text-sm"
+                      className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-4 py-2 rounded-full hover:from-pink-700 hover:to-purple-700 transition-colors"
                     >
                       <Instagram className="w-4 h-4" />
                       <span>{profile.instagram}</span>
@@ -256,7 +256,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-4 justify-between text-gray-400 text-xs sm:text-sm">
+              <div className="flex items-center space-x-4 mt-4 justify-between *:text-gray-400">
                 {profile.createdByUser && (
                   <div className="flex items-center space-x-1">
                     <User className="w-4 h-4" />
@@ -272,7 +272,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
 
             {/* Economic Situation */}
             {(profile.netSalary || profile.fatherJob || profile.motherJob) && (
-              <div className="bg-gray-800/50 rounded-xl p-4 sm:p-6 border border-gray-700">
+              <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
                 <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center space-x-2">
                   <DollarSign className="w-5 h-5" />
                   <span>Situación Económica</span>
@@ -281,7 +281,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                   {profile.netSalary && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Salario neto:</span>
-                      <span className="text-white font-medium flex items-center space-x-1 text-sm sm:text-base">
+                      <span className="text-white font-medium flex items-center space-x-1">
                         <span className="text-white">RD$</span>
                         <span>
                           {Number(
@@ -292,19 +292,19 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                     </div>
                   )}
                   {profile.fatherJob && (
-                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                    <div className="flex justify-between">
                       <span className="text-gray-400">Trabajo del padre:</span>
-                      <span className="text-white font-medium text-sm sm:text-base">
+                      <span className="text-white font-medium">
                         {profile.fatherJob}
                       </span>
                     </div>
                   )}
                   {profile.motherJob && (
-                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                    <div className="flex justify-between">
                       <span className="text-gray-400">
                         Trabajo de la madre:
                       </span>
-                      <span className="text-white font-medium text-sm sm:text-base">
+                      <span className="text-white font-medium">
                         {profile.motherJob}
                       </span>
                     </div>
@@ -314,31 +314,31 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
             )}
 
             {/* Physical Characteristics */}
-            <div className="bg-gray-800/50 rounded-xl p-4 sm:p-6 border border-gray-700">
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
               <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center space-x-2">
                 <User className="w-5 h-5" />
                 <span>Características Físicas</span>
               </h3>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <div className="bg-gray-700/30 rounded-lg p-2 sm:p-3">
-                  <div className="text-gray-400 text-xs sm:text-sm">Altura</div>
-                  <div className="text-white font-medium text-sm sm:text-base">{profile.height}</div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-700/30 rounded-lg p-3">
+                  <div className="text-gray-400 text-sm">Altura</div>
+                  <div className="text-white font-medium">{profile.height}</div>
                 </div>
-                <div className="bg-gray-700/30 rounded-lg p-2 sm:p-3">
-                  <div className="text-gray-400 text-xs sm:text-sm">Culo</div>
-                  <div className="text-white font-medium text-sm sm:text-base">
+                <div className="bg-gray-700/30 rounded-lg p-3">
+                  <div className="text-gray-400 text-sm">Culo</div>
+                  <div className="text-white font-medium">
                     {profile.bodySize}
                   </div>
                 </div>
-                <div className="bg-gray-700/30 rounded-lg p-2 sm:p-3">
-                  <div className="text-gray-400 text-xs sm:text-sm">Teta</div>
-                  <div className="text-white font-medium text-sm sm:text-base">
+                <div className="bg-gray-700/30 rounded-lg p-3">
+                  <div className="text-gray-400 text-sm">Teta</div>
+                  <div className="text-white font-medium">
                     {profile.bustSize}
                   </div>
                 </div>
-                <div className="bg-gray-700/30 rounded-lg p-2 sm:p-3">
-                  <div className="text-gray-400 text-xs sm:text-sm">Piel</div>
-                  <div className="text-white font-medium text-sm sm:text-base">
+                <div className="bg-gray-700/30 rounded-lg p-3">
+                  <div className="text-gray-400 text-sm">Piel</div>
+                  <div className="text-white font-medium">
                     {profile.skinColor}
                   </div>
                 </div>
@@ -346,31 +346,31 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
             </div>
 
             {/* Location */}
-            <div className="bg-gray-800/50 rounded-xl p-4 sm:p-6 border border-gray-700">
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
               <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center space-x-2">
                 <Home className="w-5 h-5" />
                 <span>Ubicación</span>
               </h3>
               <div className="space-y-3">
                 {profile.nationality && (
-                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                  <div className="flex justify-between">
                     <span className="text-gray-400">Nacionalidad:</span>
-                    <span className="text-white font-medium text-sm sm:text-base">
+                    <span className="text-white font-medium">
                       {profile.nationality}
                     </span>
                   </div>
                 )}
                 {profile.residence && (
-                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                  <div className="flex justify-between">
                     <span className="text-gray-400">Residencia:</span>
-                    <span className="text-white font-medium text-sm sm:text-base">
+                    <span className="text-white font-medium">
                       {profile.residence}
                     </span>
                   </div>
                 )}
-                <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                <div className="flex justify-between">
                   <span className="text-gray-400">Vive:</span>
-                  <span className="text-white font-medium text-sm sm:text-base">
+                  <span className="text-white font-medium">
                     {profile.livingWith}
                   </span>
                 </div>
@@ -379,7 +379,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
 
             {/* Gustos e Intereses */}
             {(profile.musicTags.length > 0 || profile.placeTags.length > 0) && (
-              <div className="bg-gray-800/50 rounded-xl p-4 sm:p-6 border border-gray-700">
+              <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
                 <h3 className="text-lg font-semibold text-red-300 mb-6 flex items-center space-x-2">
                   <Heart className="w-5 h-5 fill-current" />
                   <span>Gustos Personales</span>
@@ -393,11 +393,11 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                         <Music className="w-4 h-4 text-red-400" />
                         <span>Música Favorita</span>
                       </h4>
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {profile.musicTags.map((tag, index) => (
                           <span
                             key={index}
-                            className="bg-gradient-to-r from-red-800/40 to-red-700/40 text-red-200 px-2 py-1 sm:px-3 sm:py-2 rounded-full text-xs sm:text-sm border border-red-700/30 backdrop-blur-sm"
+                            className="bg-gradient-to-r from-red-800/40 to-red-700/40 text-red-200 px-3 py-2 rounded-full text-sm border border-red-700/30 backdrop-blur-sm"
                           >
                             🎵 {tag}
                           </span>
@@ -413,11 +413,11 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                         <Location className="w-4 h-4 text-red-400" />
                         <span>Lugares Favoritos</span>
                       </h4>
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {profile.placeTags.map((tag, index) => (
                           <span
                             key={index}
-                            className="bg-gradient-to-r from-purple-800/40 to-purple-700/40 text-purple-200 px-2 py-1 sm:px-3 sm:py-2 rounded-full text-xs sm:text-sm border border-purple-700/30 backdrop-blur-sm"
+                            className="bg-gradient-to-r from-purple-800/40 to-purple-700/40 text-purple-200 px-3 py-2 rounded-full text-sm border border-purple-700/30 backdrop-blur-sm"
                           >
                             📍 {tag}
                           </span>
@@ -431,7 +431,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
 
             {/* Sección de Me Gusta */}
             {profile.likesCount > 0 && (
-              <div className="bg-gray-800/50 rounded-xl p-4 sm:p-6 border border-gray-700">
+              <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
                 <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center space-x-2">
                   <ThumbsUp className="w-5 h-5" />
                   <span>Usuarios interesados</span>
@@ -439,11 +439,11 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
 
                 {profile.likedByUsers.length > 0 ? (
                   <div className="space-y-3">
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {profile.likedByUsers.slice(0, 6).map((user) => (
                         <div
                           key={user.id}
-                          className="flex items-center space-x-3 bg-gray-700/30 rounded-lg p-2 sm:p-3"
+                          className="flex items-center space-x-3 bg-gray-700/30 rounded-lg p-3"
                         >
                           <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
                             <span className="text-white font-bold text-sm">
@@ -454,12 +454,12 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                             <div className="text-white font-medium truncate">
                               {user.fullName}
                             </div>
-                            <div className="text-gray-400 text-xs sm:text-sm">
+                            <div className="text-gray-400 text-sm">
                               @{user.username}
                             </div>
                           </div>
                           {user.role === "admin" && (
-                            <div className="bg-purple-600/20 text-purple-300 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs">
+                            <div className="bg-purple-600/20 text-purple-300 px-2 py-1 rounded text-xs">
                               Admin
                             </div>
                           )}
@@ -469,7 +469,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
 
                     {profile.likedByUsers.length > 6 && (
                       <div className="text-center">
-                        <div className="text-gray-400 text-xs sm:text-sm">
+                        <div className="text-gray-400 text-sm">
                           Y {profile.likedByUsers.length - 6} personas más...
                         </div>
                       </div>
@@ -478,7 +478,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
                 ) : (
                   <div className="text-center py-4">
                     <Users className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                    <p className="text-gray-400 text-xs sm:text-sm">
+                    <p className="text-gray-400 text-sm">
                       Los usuarios que dieron me gusta aparecerán aquí
                     </p>
                   </div>
@@ -489,7 +489,7 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
         </div>
 
         {/* Sección de comentarios */}
-        <div className="mt-6 lg:mt-8">
+        <div className="mt-8">
           <CommentsSection profileId={profile.id} currentUser={currentUser} />
         </div>
       </div>

@@ -1,8 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { Profile, MediaItem } from '../types';
 import { DatabaseProfile, DatabaseProfilePhoto } from '../lib/supabase';
-import { EncryptedStorageService } from './encryptedStorageService';
-import { EncryptedFileMetadata } from '../utils/encryption';
 
 // Interfaz para los likes de perfiles
 interface ProfileLike {
@@ -105,20 +103,45 @@ const convertProfileToDatabaseProfile = (profile: Omit<Profile, 'id' | 'createdA
   is_available: profile.isAvailable !== undefined ? profile.isAvailable : true,
 });
 
-// Subir archivo cifrado (imagen o video) a Supabase Storage
-export const uploadFile = async (
-  file: File, 
-  profileId: string, 
-  order: number, 
-  type: 'photo' | 'video'
-): Promise<{ url: string; metadata: EncryptedFileMetadata }> => {
-  console.log('Subiendo archivo cifrado:', file.name, 'Tipo:', type);
-  return await EncryptedStorageService.uploadEncryptedFile(file, profileId, order, type);
+// Subir archivo (imagen o video) a Supabase Storage
+export const uploadFile = async (file: File, profileId: string, order: number, type: 'photo' | 'video'): Promise<string> => {
+  const fileExt = file.name.split('.').pop();
+  const bucket = type === 'photo' ? 'profile-photos' : 'profile-videos';
+  const fileName = `${profileId}/${order}.${fileExt}`;
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: true
+    });
+
+  if (error) {
+    throw new Error(`Error subiendo ${type}: ${error.message}`);
+  }
+
+  // Obtener URL pública
+  const { data: { publicUrl } } = supabase.storage
+    .from(bucket)
+    .getPublicUrl(fileName);
+
+  return publicUrl;
 };
 
-// Eliminar archivo cifrado de Supabase Storage
-export const deleteFile = async (fileUrl: string): Promise<void> => {
-  await EncryptedStorageService.deleteEncryptedFile(fileUrl);
+// Eliminar archivo de Supabase Storage
+export const deleteFile = async (fileUrl: string, type: 'photo' | 'video'): Promise<void> => {
+  // Extraer el path del archivo de la URL
+  const urlParts = fileUrl.split('/');
+  const fileName = urlParts.slice(-2).join('/'); // profileId/order.ext
+  const bucket = type === 'photo' ? 'profile-photos' : 'profile-videos';
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .remove([fileName]);
+
+  if (error) {
+    console.error(`Error eliminando ${type}:`, error);
+  }
 };
 
 // Convertir archivo base64 a File
@@ -281,14 +304,14 @@ export const createProfile = async (
       const fileExt = mediaItem.type === 'photo' ? 'jpg' : 'mp4';
       const file = base64ToFile(mediaItem.url, `${mediaItem.type}-${i}.${fileExt}`);
       
-      // Subir archivo cifrado
-      const { url: fileUrl, metadata } = await uploadFile(file, profileId, i, mediaItem.type);
+      // Subir archivo
+      const fileUrl = await uploadFile(file, profileId, i, mediaItem.type);
       mediaItems.push({
         url: fileUrl,
         type: mediaItem.type
       });
 
-      // Guardar referencia en la base de datos con metadata de cifrado
+      // Guardar referencia en la base de datos
       const { error: mediaError } = await supabase
         .from('profile_photos')
         .insert([{
@@ -296,8 +319,7 @@ export const createProfile = async (
           photo_url: mediaItem.type === 'photo' ? fileUrl : '',
           video_url: mediaItem.type === 'video' ? fileUrl : null,
           media_type: mediaItem.type,
-          photo_order: i,
-          encryption_metadata: JSON.stringify(metadata) // Guardar metadata de cifrado
+          photo_order: i
         }]);
 
       if (mediaError) {
@@ -372,14 +394,14 @@ export const updateProfile = async (updatedProfile: Profile): Promise<Profile> =
         // Es nuevo archivo en base64, subirlo
         const fileExt = mediaItem.type === 'photo' ? 'jpg' : 'mp4';
         const file = base64ToFile(mediaItem.url, `${mediaItem.type}-${i}.${fileExt}`);
-        const { url: fileUrl, metadata } = await uploadFile(file, updatedProfile.id, i, mediaItem.type);
+        const fileUrl = await uploadFile(file, updatedProfile.id, i, mediaItem.type);
         console.log('Archivo subido:', fileUrl);
         newMediaItems.push({
           url: fileUrl,
           type: mediaItem.type
         });
 
-        // Guardar nueva referencia con metadata de cifrado
+        // Guardar nueva referencia
         const { error: insertError } = await supabase
           .from('profile_photos')
           .insert([{
@@ -387,8 +409,7 @@ export const updateProfile = async (updatedProfile: Profile): Promise<Profile> =
             photo_url: mediaItem.type === 'photo' ? fileUrl : '',
             video_url: mediaItem.type === 'video' ? fileUrl : null,
             media_type: mediaItem.type,
-            photo_order: i,
-            encryption_metadata: JSON.stringify(metadata)
+            photo_order: i
           }]);
 
         if (insertError) {
@@ -407,8 +428,7 @@ export const updateProfile = async (updatedProfile: Profile): Promise<Profile> =
             photo_url: mediaItem.type === 'photo' ? mediaItem.url : '',
             video_url: mediaItem.type === 'video' ? mediaItem.url : null,
             media_type: mediaItem.type,
-            photo_order: i,
-            encryption_metadata: null // Archivo existente, sin nueva metadata
+            photo_order: i
           }]);
 
         if (insertError) {
@@ -425,8 +445,14 @@ export const updateProfile = async (updatedProfile: Profile): Promise<Profile> =
     console.log('Archivos a eliminar del storage:', mediaToDelete);
     
     for (const mediaUrl of mediaToDelete) {
-      console.log('Eliminando archivo del storage:', mediaUrl);
-      await deleteFile(mediaUrl);
+      const mediaRecord = currentMedia?.find(m => 
+        (m.media_type === 'video' ? (m.video_url || m.photo_url) : m.photo_url) === mediaUrl
+      );
+      
+      if (mediaRecord) {
+        console.log('Eliminando archivo del storage:', mediaUrl);
+        await deleteFile(mediaUrl, mediaRecord.media_type || 'photo');
+      }
     }
 
     console.log('Actualización completada. Media final:', newMediaItems);
@@ -450,7 +476,7 @@ export const deleteProfile = async (profileId: string): Promise<void> => {
     if (media) {
       for (const item of media) {
         const url = item.media_type === 'video' ? (item.video_url || item.photo_url) : item.photo_url;
-        await deleteFile(url);
+        await deleteFile(url, item.media_type || 'photo');
       }
     }
 
@@ -584,20 +610,5 @@ export const getProfileLikes = async (profileId: string): Promise<{ likesCount: 
   } catch (error) {
     console.error('Error en getProfileLikes:', error);
     throw error;
-  }
-};
-
-// Obtener URL descifrada de un archivo
-export const getDecryptedFileUrl = async (
-  encryptedUrl: string, 
-  encryptionMetadata: string
-): Promise<string> => {
-  try {
-    const metadata = JSON.parse(encryptionMetadata) as EncryptedFileMetadata;
-    return await EncryptedStorageService.downloadAndDecryptFile(encryptedUrl, metadata);
-  } catch (error) {
-    console.error('Error obteniendo URL descifrada:', error);
-    // Fallback: devolver la URL original si hay error
-    return encryptedUrl;
   }
 };
