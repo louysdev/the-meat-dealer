@@ -20,6 +20,7 @@ import { useProfiles } from './hooks/useProfiles';
 import { usePrivateVideos } from './hooks/usePrivateVideos';
 import { useModal } from './hooks/useModal';
 import { useAuth } from './hooks/useAuth';
+import { canUserAccessPrivateVideos, canUserCreatePrivateProfiles } from './utils/privateVideoPermissions';
 import { createPrivateVideoProfile, updatePrivateVideoProfile, deletePrivateVideoProfile } from './services/privateVideoService';
 
 // Declaraciones de tipo para las funciones de window
@@ -47,8 +48,6 @@ function App() {
 
   const {
     profiles: privateProfiles,
-    loading: privateLoading,
-    error: privateError,
     refreshProfiles: refreshPrivateProfiles
   } = usePrivateVideos(currentUser?.id);
 
@@ -217,6 +216,14 @@ function App() {
   };
 
   const handlePrivateVideos = () => {
+    if (!currentUser || !canUserAccessPrivateVideos(currentUser)) {
+      showError(
+        'Acceso Denegado',
+        'No tienes permisos para acceder a la sección de videos privados.'
+      );
+      return;
+    }
+    
     setCurrentView('private-videos');
     setSelectedProfile(null);
     setSelectedPrivateProfile(null);
@@ -228,6 +235,14 @@ function App() {
   };
 
   const handleCreatePrivateProfile = () => {
+    if (!currentUser || !canUserCreatePrivateProfiles(currentUser)) {
+      showError(
+        'Acceso Denegado',
+        'No tienes permisos para crear perfiles privados.'
+      );
+      return;
+    }
+    
     setCurrentView('create-private-profile');
     setSelectedProfile(null);
     setSelectedPrivateProfile(null);
@@ -412,7 +427,7 @@ function App() {
               profiles={privateProfiles}
               onProfileClick={handlePrivateVideoClick}
               onCreateProfile={handleCreatePrivateProfile}
-              currentUserRole={currentUser?.role}
+              currentUser={currentUser || undefined}
             />
           )}
 

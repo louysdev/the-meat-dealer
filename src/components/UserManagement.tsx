@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Trash2, UserCheck, UserX, Eye, EyeOff, UserRoundPlus, ArrowLeft } from 'lucide-react';
+import { Users, Edit, Trash2, UserCheck, UserX, Eye, EyeOff, UserRoundPlus, ArrowLeft, Video, VideoOff } from 'lucide-react';
 import { User, CreateUserData } from '../types';
-import { getUsers, createUser, updateUser, toggleUserStatus, deleteUser } from '../services/userService';
+import { getUsers, createUser, updateUser, toggleUserStatus, togglePrivateVideoAccess, deleteUser } from '../services/userService';
 import { Modal } from './Modal';
 import { LoadingSpinner } from './LoadingSpinner';
 
@@ -33,7 +33,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
     fullName: '',
     username: '',
     password: '',
-    role: 'user'
+    role: 'user',
+    canAccessPrivateVideos: false
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -61,7 +62,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
       await createUser(formData, currentUser.id);
       await loadUsers();
       setShowCreateForm(false);
-      setFormData({ fullName: '', username: '', password: '', role: 'user' });
+      setFormData({ fullName: '', username: '', password: '', role: 'user', canAccessPrivateVideos: false });
       showModal('Usuario Creado', 'El usuario se ha creado exitosamente.', 'success');
     } catch (err) {
       showModal('Error', err instanceof Error ? err.message : 'Error creando usuario', 'error');
@@ -77,7 +78,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
       await updateUser(editingUser.id, formData);
       await loadUsers();
       setEditingUser(null);
-      setFormData({ fullName: '', username: '', password: '', role: 'user' });
+      setFormData({ fullName: '', username: '', password: '', role: 'user', canAccessPrivateVideos: false });
       showModal('Usuario Actualizado', 'Los cambios se han guardado exitosamente.', 'success');
     } catch (err) {
       showModal('Error', err instanceof Error ? err.message : 'Error actualizando usuario', 'error');
@@ -95,6 +96,20 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
       );
     } catch (err) {
       showModal('Error', err instanceof Error ? err.message : 'Error actualizando estado', 'error');
+    }
+  };
+
+  const handleTogglePrivateVideoAccess = async (userId: string, hasAccess: boolean) => {
+    try {
+      await togglePrivateVideoAccess(userId, !hasAccess);
+      await loadUsers();
+      showModal(
+        'Acceso Actualizado',
+        `El acceso a videos privados ha sido ${!hasAccess ? 'habilitado' : 'deshabilitado'} exitosamente.`,
+        'success'
+      );
+    } catch (err) {
+      showModal('Error', err instanceof Error ? err.message : 'Error actualizando acceso', 'error');
     }
   };
 
@@ -129,7 +144,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
       fullName: user.fullName,
       username: user.username,
       password: '',
-      role: user.role
+      role: user.role,
+      canAccessPrivateVideos: user.canAccessPrivateVideos
     });
     setShowCreateForm(true);
   };
@@ -137,7 +153,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
   const cancelEdit = () => {
     setEditingUser(null);
     setShowCreateForm(false);
-    setFormData({ fullName: '', username: '', password: '', role: 'user' });
+    setFormData({ fullName: '', username: '', password: '', role: 'user', canAccessPrivateVideos: false });
   };
 
   if (loading) {
@@ -237,13 +253,37 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
                   </label>
                   <select
                     value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'user' })}
+                    onChange={(e) => {
+                      const newRole = e.target.value as 'admin' | 'user';
+                      setFormData({ 
+                        ...formData, 
+                        role: newRole,
+                        canAccessPrivateVideos: newRole === 'admin' || formData.canAccessPrivateVideos
+                      });
+                    }}
                     className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="user">Usuario</option>
                     <option value="admin">Administrador</option>
                   </select>
                 </div>
+              </div>
+              
+              {/* Checkbox para acceso a videos privados */}
+              <div className="mt-4">
+                <label className="flex items-center space-x-3 text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={formData.canAccessPrivateVideos || formData.role === 'admin'}
+                    disabled={formData.role === 'admin'}
+                    onChange={(e) => setFormData({ ...formData, canAccessPrivateVideos: e.target.checked })}
+                    className="w-4 h-4 bg-gray-800 border border-gray-600 rounded focus:ring-2 focus:ring-red-500 focus:ring-offset-0 text-red-600 disabled:opacity-50"
+                  />
+                  <span className="text-sm">
+                    Acceso a Videos Privados
+                    {formData.role === 'admin' && <span className="text-gray-500 ml-1">(automático para admins)</span>}
+                  </span>
+                </label>
               </div>
               <div className="flex space-x-3">
                 <button
@@ -273,6 +313,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
                 <th className="text-gray-300 font-medium py-3 px-4">Nombre de Usuario</th>
                 <th className="text-gray-300 font-medium py-3 px-4">Rol</th>
                 <th className="text-gray-300 font-medium py-3 px-4">Estado</th>
+                <th className="text-gray-300 font-medium py-3 px-4">Videos Privados</th>
                 <th className="text-gray-300 font-medium py-3 px-4">Creado</th>
                 <th className="text-gray-300 font-medium py-3 px-4">Acciones</th>
               </tr>
@@ -305,6 +346,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
                       {user.isActive ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
+                  <td className="py-4 px-4">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      user.canAccessPrivateVideos || user.role === 'admin'
+                        ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-600/30'
+                        : 'bg-gray-600/20 text-gray-300 border border-gray-600/30'
+                    }`}>
+                      {user.canAccessPrivateVideos || user.role === 'admin' ? 'Con Acceso' : 'Sin Acceso'}
+                    </span>
+                  </td>
                   <td className="py-4 px-4 text-gray-400 text-sm">
                     {user.createdAt.toLocaleDateString()}
                   </td>
@@ -328,6 +378,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
                       >
                         {user.isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                       </button>
+                      {user.role !== 'admin' && (
+                        <button
+                          onClick={() => handleTogglePrivateVideoAccess(user.id, user.canAccessPrivateVideos)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            user.canAccessPrivateVideos
+                              ? 'text-red-400 hover:text-red-300 hover:bg-red-600/20'
+                              : 'text-green-400 hover:text-green-300 hover:bg-green-600/20'
+                          }`}
+                          title={user.canAccessPrivateVideos ? 'Revocar acceso a videos privados' : 'Conceder acceso a videos privados'}
+                        >
+                          {user.canAccessPrivateVideos ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                        </button>
+                      )}
                       {user.id !== currentUser.id && (
                         <button
                           onClick={() => handleDeleteUser(user)}

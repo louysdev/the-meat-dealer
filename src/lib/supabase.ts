@@ -51,6 +51,7 @@ export interface DatabaseUser {
   password_hash: string;
   role: 'admin' | 'user';
   is_active: boolean;
+  can_access_private_videos: boolean;
   created_at: string;
   updated_at: string;
   created_by?: string;

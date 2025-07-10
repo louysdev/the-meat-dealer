@@ -213,8 +213,7 @@ export const PrivateVideoDetail: React.FC<PrivateVideoDetailProps> = ({
                           <div className="flex-1">
                             <div className="text-white font-medium">{video.title}</div>
                             <div className="text-gray-400 text-xs">
-                              {video.durationSeconds && `${Math.floor(video.durationSeconds / 60)}:${(video.durationSeconds % 60).toString().padStart(2, '0')}`}
-                              {video.fileSizeMb && ` • ${video.fileSizeMb.toFixed(1)} MB`}
+                              {video.fileSizeMb && `${video.fileSizeMb.toFixed(1)} MB`}
                             </div>
                           </div>
                           <Play className="w-5 h-5 text-purple-400" />

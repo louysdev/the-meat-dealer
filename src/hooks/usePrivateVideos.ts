@@ -12,7 +12,9 @@ export const usePrivateVideos = (currentUserId?: string) => {
     try {
       setLoading(true);
       setError(null);
+      console.log('Hook: Iniciando carga de perfiles para usuario:', currentUserId);
       const data = await getPrivateVideoProfiles(currentUserId);
+      console.log('Hook: Perfiles cargados:', data.length, data);
       setProfiles(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');

@@ -9,8 +9,22 @@ import {
   CreatePrivateVideoProfileData,
   CreatePrivateVideoCommentData,
   CreatePrivateVideoData,
-  CreatePrivatePhotoData
+  CreatePrivatePhotoData,
+  User
 } from '../types';
+
+// Helper para convertir usuario de la base de datos
+const convertDatabaseUser = (dbUser: any): User => ({
+  id: dbUser.id,
+  fullName: dbUser.full_name,
+  username: dbUser.username,
+  role: dbUser.role,
+  isActive: dbUser.is_active,
+  canAccessPrivateVideos: dbUser.can_access_private_videos || dbUser.role === 'admin',
+  createdAt: new Date(dbUser.created_at),
+  updatedAt: new Date(dbUser.updated_at),
+  createdBy: dbUser.created_by
+});
 
 // Convertir perfil de video privado de la base de datos
 const convertDatabasePrivateVideoProfile = (
@@ -34,15 +48,7 @@ const convertDatabasePrivateVideoProfile = (
   } : undefined,
   createdAt: new Date(dbProfile.created_at),
   updatedAt: new Date(dbProfile.updated_at),
-  createdBy: dbProfile.created_by_user ? {
-    id: dbProfile.created_by_user.id,
-    fullName: dbProfile.created_by_user.full_name,
-    username: dbProfile.created_by_user.username,
-    role: dbProfile.created_by_user.role,
-    isActive: dbProfile.created_by_user.is_active,
-    createdAt: new Date(dbProfile.created_by_user.created_at),
-    updatedAt: new Date(dbProfile.created_by_user.updated_at)
-  } : undefined,
+  createdBy: dbProfile.created_by_user ? convertDatabaseUser(dbProfile.created_by_user) : undefined,
   videosCount: stats.videos_count,
   photosCount: stats.photos_count,
   hasAccess,
@@ -58,7 +64,34 @@ export const getPrivateVideoProfiles = async (currentUserId?: string): Promise<P
       return [];
     }
 
-    // Obtener perfiles a los que el usuario tiene acceso
+    // Primero verificar si el usuario tiene acceso general a videos privados
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('role, can_access_private_videos')
+      .eq('id', currentUserId)
+      .single();
+
+    if (userError) {
+      throw new Error(`Error verificando permisos de usuario: ${userError.message}`);
+    }
+
+    const isAdmin = user?.role === 'admin';
+    const canAccessPrivateVideos = isAdmin || user?.can_access_private_videos;
+
+    console.log('Usuario:', {
+      id: currentUserId,
+      role: user?.role,
+      can_access_private_videos: user?.can_access_private_videos,
+      isAdmin,
+      canAccessPrivateVideos
+    });
+
+    if (!canAccessPrivateVideos) {
+      console.log('Usuario no tiene acceso a videos privados');
+      return [];
+    }
+
+    // Obtener perfiles
     const { data: profiles, error: profilesError } = await supabase
       .from('private_video_profiles')
       .select(`
@@ -76,6 +109,7 @@ export const getPrivateVideoProfiles = async (currentUserId?: string): Promise<P
           username,
           role,
           is_active,
+          can_access_private_videos,
           created_at,
           updated_at
         )
@@ -87,46 +121,27 @@ export const getPrivateVideoProfiles = async (currentUserId?: string): Promise<P
     }
 
     if (!profiles || profiles.length === 0) {
+      console.log('No se encontraron perfiles en la base de datos');
       return [];
     }
 
-    // Obtener accesos del usuario
-    const { data: accesses, error: accessError } = await supabase
-      .from('private_video_access')
-      .select('*')
-      .eq('user_id', currentUserId);
+    console.log('Perfiles encontrados en BD:', profiles.length);
 
-    if (accessError) {
-      console.error('Error obteniendo accesos:', accessError);
-    }
+    // Para admins, mostrar todos los perfiles
+    // Para usuarios regulares con acceso, mostrar solo sus propios perfiles o los que tienen acceso específico
+    const filteredProfiles = isAdmin 
+      ? profiles 
+      : profiles.filter(profile => 
+          profile.created_by === currentUserId || 
+          // Aquí podrías agregar lógica adicional para perfiles con acceso específico
+          true // Por ahora, mostrar todos los perfiles para usuarios con acceso general
+        );
 
-    const accessMap = (accesses || []).reduce((acc, access) => {
-      acc[access.profile_id] = {
-        canView: access.can_view,
-        canUpload: access.can_upload
-      };
-      return acc;
-    }, {} as Record<string, { canView: boolean; canUpload: boolean }>);
+    console.log('Perfiles después del filtro:', filteredProfiles.length);
 
-    // Verificar si es admin
-    const { data: user } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', currentUserId)
-      .single();
-
-    const isAdmin = user?.role === 'admin';
-
-    // Obtener estadísticas y filtrar por acceso
+    // Obtener estadísticas para cada perfil
     const profilesWithStats = await Promise.all(
-      profiles.map(async (profile) => {
-        const access = accessMap[profile.id];
-        const hasAccess = isAdmin || (access?.canView === true);
-        
-        if (!hasAccess) {
-          return null; // No incluir perfiles sin acceso
-        }
-
+      filteredProfiles.map(async (profile) => {
         // Obtener estadísticas
         const { data: stats } = await supabase
           .rpc('get_private_video_stats', { profile_uuid: profile.id });
@@ -136,13 +151,13 @@ export const getPrivateVideoProfiles = async (currentUserId?: string): Promise<P
         return convertDatabasePrivateVideoProfile(
           profile,
           profileStats,
-          hasAccess,
-          isAdmin || (access?.canUpload === true)
+          true, // hasAccess = true porque ya verificamos el acceso general
+          isAdmin || profile.created_by === currentUserId // canUpload = admin o creador del perfil
         );
       })
     );
 
-    return profilesWithStats.filter(profile => profile !== null) as PrivateVideoProfile[];
+    return profilesWithStats;
   } catch (error) {
     console.error('Error en getPrivateVideoProfiles:', error);
     throw error;
@@ -221,32 +236,33 @@ export const getPrivateProfileMedia = async (
   currentUserId?: string
 ): Promise<{ videos: PrivateVideo[]; photos: PrivatePhoto[] }> => {
   try {
+    console.log('getPrivateProfileMedia llamado para perfil:', profileId, 'usuario:', currentUserId);
     
     if (!currentUserId) {
       throw new Error('Usuario no autenticado');
     }
 
-    // Verificar si es admin o verificar acceso
+    // Verificar si el usuario tiene acceso a videos privados
     const { data: user } = await supabase
       .from('users')
-      .select('role')
+      .select('role, can_access_private_videos')
       .eq('id', currentUserId)
       .single();
 
-    const isAdmin = user?.role === 'admin';
+    console.log('Usuario encontrado:', user);
 
-    // Solo verificar acceso específico si no es admin
-    if (!isAdmin) {
-      const hasAccess = await supabase.rpc('user_has_private_access', {
-        user_uuid: currentUserId,
-        profile_uuid: profileId
-      });
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
 
-      if (!hasAccess.data) {
-        throw new Error('No tienes acceso a este contenido privado');
-      }
-    } else {
-      console.log('Usuario admin detectado, omitiendo verificación de acceso');
+    const isAdmin = user.role === 'admin';
+    const hasPrivateAccess = user.can_access_private_videos === true;
+
+    console.log('isAdmin:', isAdmin, 'hasPrivateAccess:', hasPrivateAccess);
+
+    // Verificar acceso: admin o usuario con permisos
+    if (!isAdmin && !hasPrivateAccess) {
+      throw new Error('No tienes acceso a contenido privado');
     }
 
     // Obtener videos
@@ -340,15 +356,7 @@ export const getPrivateProfileMedia = async (
         fileSizeMb: video.file_size_mb,
         videoOrder: video.video_order,
         createdAt: new Date(video.created_at),
-        uploadedBy: video.uploaded_by_user ? {
-          id: video.uploaded_by_user.id,
-          fullName: video.uploaded_by_user.full_name,
-          username: video.uploaded_by_user.username,
-          role: video.uploaded_by_user.role,
-          isActive: video.uploaded_by_user.is_active,
-          createdAt: new Date(video.uploaded_by_user.created_at),
-          updatedAt: new Date(video.uploaded_by_user.updated_at)
-        } : undefined
+        uploadedBy: video.uploaded_by_user ? convertDatabaseUser(video.uploaded_by_user) : undefined
       };
     }));
 
@@ -378,15 +386,7 @@ export const getPrivateProfileMedia = async (
         photoUrl: signedPhotoUrl,
         photoOrder: photo.photo_order,
         createdAt: new Date(photo.created_at),
-        uploadedBy: photo.uploaded_by_user ? {
-          id: photo.uploaded_by_user.id,
-          fullName: photo.uploaded_by_user.full_name,
-          username: photo.uploaded_by_user.username,
-          role: photo.uploaded_by_user.role,
-          isActive: photo.uploaded_by_user.is_active,
-          createdAt: new Date(photo.uploaded_by_user.created_at),
-          updatedAt: new Date(photo.uploaded_by_user.updated_at)
-        } : undefined
+        uploadedBy: photo.uploaded_by_user ? convertDatabaseUser(photo.uploaded_by_user) : undefined
       };
     }));
 
@@ -437,24 +437,8 @@ export const getPrivateVideoAccesses = async (profileId: string): Promise<Privat
       canView: access.can_view,
       canUpload: access.can_upload,
       grantedAt: new Date(access.granted_at),
-      user: {
-        id: access.user.id,
-        fullName: access.user.full_name,
-        username: access.user.username,
-        role: access.user.role,
-        isActive: access.user.is_active,
-        createdAt: new Date(access.user.created_at),
-        updatedAt: new Date(access.user.updated_at)
-      },
-      grantedBy: access.granted_by_user ? {
-        id: access.granted_by_user.id,
-        fullName: access.granted_by_user.full_name,
-        username: access.granted_by_user.username,
-        role: access.granted_by_user.role,
-        isActive: access.granted_by_user.is_active,
-        createdAt: new Date(access.granted_by_user.created_at),
-        updatedAt: new Date(access.granted_by_user.updated_at)
-      } : undefined
+      user: convertDatabaseUser(access.user),
+      grantedBy: access.granted_by_user ? convertDatabaseUser(access.granted_by_user) : undefined
     }));
   } catch (error) {
     console.error('Error en getPrivateVideoAccesses:', error);
@@ -521,14 +505,23 @@ export const getPrivateVideoComments = async (
       return [];
     }
 
-    // Verificar acceso
-    const hasAccess = await supabase.rpc('user_has_private_access', {
-      user_uuid: currentUserId,
-      profile_uuid: profileId
-    });
+    // Verificar si el usuario tiene acceso a videos privados
+    const { data: user } = await supabase
+      .from('users')
+      .select('role, can_access_private_videos')
+      .eq('id', currentUserId)
+      .single();
 
-    if (!hasAccess.data) {
-      throw new Error('No tienes acceso a este contenido privado');
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const isAdmin = user.role === 'admin';
+    const hasPrivateAccess = user.can_access_private_videos === true;
+
+    // Verificar acceso: admin o usuario con permisos
+    if (!isAdmin && !hasPrivateAccess) {
+      throw new Error('No tienes acceso a contenido privado');
     }
 
     // Obtener comentarios principales
@@ -571,15 +564,7 @@ export const getPrivateVideoComments = async (
       hiddenAt: comment.hidden_at ? new Date(comment.hidden_at) : undefined,
       createdAt: new Date(comment.created_at),
       updatedAt: new Date(comment.updated_at),
-      user: {
-        id: comment.user.id,
-        fullName: comment.user.full_name,
-        username: comment.user.username,
-        role: comment.user.role,
-        isActive: comment.user.is_active,
-        createdAt: new Date(comment.user.created_at),
-        updatedAt: new Date(comment.user.updated_at)
-      },
+      user: convertDatabaseUser(comment.user),
       likesCount: 0, // TODO: Implementar conteo real
       dislikesCount: 0,
       repliesCount: 0,
@@ -597,14 +582,23 @@ export const createPrivateVideoComment = async (
   userId: string
 ): Promise<PrivateVideoComment> => {
   try {
-    // Verificar acceso
-    const hasAccess = await supabase.rpc('user_has_private_access', {
-      user_uuid: userId,
-      profile_uuid: commentData.profileId
-    });
+    // Verificar si el usuario tiene acceso a videos privados
+    const { data: user } = await supabase
+      .from('users')
+      .select('role, can_access_private_videos')
+      .eq('id', userId)
+      .single();
 
-    if (!hasAccess.data) {
-      throw new Error('No tienes acceso a este contenido privado');
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const isAdmin = user.role === 'admin';
+    const hasPrivateAccess = user.can_access_private_videos === true;
+
+    // Verificar acceso: admin o usuario con permisos
+    if (!isAdmin && !hasPrivateAccess) {
+      throw new Error('No tienes acceso a contenido privado');
     }
 
     const { data: comment, error } = await supabase
@@ -647,15 +641,7 @@ export const createPrivateVideoComment = async (
       hiddenAt: comment.hidden_at ? new Date(comment.hidden_at) : undefined,
       createdAt: new Date(comment.created_at),
       updatedAt: new Date(comment.updated_at),
-      user: {
-        id: comment.user.id,
-        fullName: comment.user.full_name,
-        username: comment.user.username,
-        role: comment.user.role,
-        isActive: comment.user.is_active,
-        createdAt: new Date(comment.user.created_at),
-        updatedAt: new Date(comment.user.updated_at)
-      },
+      user: convertDatabaseUser(comment.user),
       likesCount: 0,
       dislikesCount: 0,
       repliesCount: 0,

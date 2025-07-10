@@ -34,6 +34,7 @@ const convertDatabaseUserToUser = (dbUser: DatabaseUser): User => ({
   username: dbUser.username,
   role: dbUser.role,
   isActive: dbUser.is_active,
+  canAccessPrivateVideos: dbUser.can_access_private_videos || false,
   createdAt: new Date(dbUser.created_at),
   updatedAt: new Date(dbUser.updated_at),
   createdBy: dbUser.created_by
@@ -100,6 +101,7 @@ export const createUser = async (userData: CreateUserData, createdBy: string): P
         password_hash: passwordHash,
         role: userData.role,
         is_active: true,
+        can_access_private_videos: userData.canAccessPrivateVideos || (userData.role === 'admin'),
         created_by: createdBy
       }])
       .select()
@@ -126,6 +128,9 @@ export const updateUser = async (userId: string, updates: Partial<CreateUserData
     if (updates.role) updateData.role = updates.role;
     if (updates.password) {
       updateData.password_hash = await hashPassword(updates.password);
+    }
+    if (updates.canAccessPrivateVideos !== undefined) {
+      updateData.can_access_private_videos = updates.canAccessPrivateVideos;
     }
 
     const { data: user, error } = await supabase
@@ -159,6 +164,23 @@ export const toggleUserStatus = async (userId: string, isActive: boolean): Promi
     }
   } catch (error) {
     console.error('Error en toggleUserStatus:', error);
+    throw error;
+  }
+};
+
+// Alternar acceso a videos privados
+export const togglePrivateVideoAccess = async (userId: string, canAccess: boolean): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('users')
+      .update({ can_access_private_videos: canAccess })
+      .eq('id', userId);
+
+    if (error) {
+      throw new Error(`Error actualizando acceso a videos privados: ${error.message}`);
+    }
+  } catch (error) {
+    console.error('Error en togglePrivateVideoAccess:', error);
     throw error;
   }
 };

@@ -52,6 +52,7 @@ export interface User {
   username: string;
   role: 'admin' | 'user';
   isActive: boolean;
+  canAccessPrivateVideos: boolean; // Control de acceso a videos privados
   createdAt: Date;
   updatedAt: Date;
   createdBy?: string; // ID del admin que creó el usuario
@@ -95,6 +96,7 @@ export interface CreateUserData {
   username: string;
   password: string;
   role: 'admin' | 'user';
+  canAccessPrivateVideos?: boolean; // Campo opcional para control de acceso
 }
 
 // Tipos para videos privados

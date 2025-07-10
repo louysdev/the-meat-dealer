@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import { Search, Filter, Plus, Shield, Users, Video } from 'lucide-react';
-import { PrivateVideoProfile } from '../types';
+import { PrivateVideoProfile, User } from '../types';
 import { PrivateVideoCard } from './PrivateVideoCard';
+import { canUserCreatePrivateProfiles } from '../utils/privateVideoPermissions';
 
 interface PrivateVideoCatalogProps {
   profiles: PrivateVideoProfile[];
   onProfileClick: (profile: PrivateVideoProfile) => void;
   onCreateProfile: () => void;
-  currentUserRole?: 'admin' | 'user';
+  currentUser?: User;
 }
 
 export const PrivateVideoCatalog: React.FC<PrivateVideoCatalogProps> = ({
   profiles,
   onProfileClick,
   onCreateProfile,
-  currentUserRole
+  currentUser
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'recent' | 'videos'>('recent');
@@ -94,8 +95,8 @@ export const PrivateVideoCatalog: React.FC<PrivateVideoCatalogProps> = ({
         {/* Filter Controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            {/* Create Profile Button (solo admins) */}
-            {currentUserRole === 'admin' && (
+            {/* Create Profile Button (usuarios con permisos) */}
+            {currentUser && canUserCreatePrivateProfiles(currentUser) && (
               <button
                 onClick={onCreateProfile}
                 className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -191,7 +192,7 @@ export const PrivateVideoCatalog: React.FC<PrivateVideoCatalogProps> = ({
               ? 'Intenta ajustar tus filtros de búsqueda'
               : 'Aún no tienes acceso a ningún perfil de videos privados'}
           </p>
-          {currentUserRole !== 'admin' && (
+          {currentUser?.role !== 'admin' && (
             <p className="text-gray-500 text-sm">
               Contacta a un administrador para obtener acceso
             </p>

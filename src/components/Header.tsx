@@ -14,6 +14,7 @@ import {
   Shield,
 } from "lucide-react";
 import { User } from "../types";
+import { canUserAccessPrivateVideos } from "../utils/privateVideoPermissions";
 
 interface HeaderProps {
   currentView:
@@ -131,7 +132,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Agregar Perfil</span>
           </button>
 
-          {onPrivateVideos && (
+          {onPrivateVideos && currentUser && canUserAccessPrivateVideos(currentUser) && (
             <button
               onClick={() => handleMenuItemClick(() => onPrivateVideos())}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all duration-300 text-white hover:bg-white/10 ${
