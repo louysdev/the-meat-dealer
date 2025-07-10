@@ -133,36 +133,37 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       </div>
 
       {/* Content */}
-      <div className="p-4 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
+      <div className="p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4">
         {/* Quick info */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 text-sm">
-          <div className="bg-gray-800/50 rounded-lg p-2 sm:p-3">
-            <div className="text-gray-400 text-xs sm:text-sm">Altura</div>
-            <div className="text-white font-medium text-xs sm:text-sm">{profile.height}</div>
+        <div className="grid grid-cols-3 gap-1 sm:gap-2 md:gap-4 text-sm">
+          <div className="bg-gray-800/50 rounded-lg p-1.5 sm:p-2 md:p-3">
+            <div className="text-gray-400 text-xs leading-tight">Altura</div>
+            <div className="text-white font-medium text-xs leading-tight truncate">{profile.height}</div>
           </div>
-          <div className="bg-gray-800/50 rounded-lg p-2 sm:p-3">
-            <div className="text-gray-400 text-xs sm:text-sm">Culo</div>
-            <div className="text-white font-medium text-xs sm:text-sm">{profile.bodySize}</div>
+          <div className="bg-gray-800/50 rounded-lg p-1.5 sm:p-2 md:p-3">
+            <div className="text-gray-400 text-xs leading-tight">Culo</div>
+            <div className="text-white font-medium text-xs leading-tight truncate">{profile.bodySize}</div>
           </div>
-           <div className="bg-gray-800/50 rounded-lg p-2 sm:p-3">
-            <div className="text-gray-400 text-xs sm:text-sm">Teta</div>
-            <div className="text-white font-medium text-xs sm:text-sm">{profile.bustSize}</div>
+           <div className="bg-gray-800/50 rounded-lg p-1.5 sm:p-2 md:p-3">
+            <div className="text-gray-400 text-xs leading-tight">Teta</div>
+            <div className="text-white font-medium text-xs leading-tight truncate">{profile.bustSize}</div>
           </div>
         </div>
 
         {/* Tags preview */}
         {profile.musicTags.length > 0 && (
-          <div className="flex flex-wrap gap-1 sm:gap-2">
+          <div className="flex flex-wrap gap-1 sm:gap-2 min-h-0">
             {profile.musicTags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
-                className="bg-red-800/30 text-red-300 px-2 py-1 rounded-full text-xs"
+                className="bg-red-800/30 text-red-300 px-2 py-0.5 rounded-full text-xs leading-tight truncate max-w-[80px] sm:max-w-none"
+                title={tag}
               >
                 🎵 {tag}
               </span>
             ))}
             {profile.musicTags.length > 3 && (
-              <span className="text-gray-400 text-xs">
+              <span className="text-gray-400 text-xs leading-tight">
                 +{profile.musicTags.length - 3} más
               </span>
             )}
@@ -170,25 +171,28 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         )}
 
         {/* Instagram y información del creador */}
-        <div className="space-y-2">
+        <div className="space-y-1.5 sm:space-y-2">
           {profile.instagram && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-pink-400 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center space-x-1 text-pink-400 text-xs sm:text-sm min-w-0 flex-1">
                 <Instagram className="w-4 h-4" />
-                <span>{profile.instagram}</span>
+                <span className="truncate">{profile.instagram}</span>
               </div>
               
               {/* Badge de Disponibilidad */}
-              <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${
+              <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
                 profile.isAvailable !== false
                   ? 'bg-green-600/20 text-green-300 border border-green-600/30'
                   : 'bg-red-600/20 text-red-300 border border-red-600/30'
               }`}>
-                <span className="text-sm">
+                <span className="text-xs">
                   {profile.isAvailable !== false ? '😏' : '😔'}
                 </span>
-                <span>
+                <span className="hidden sm:inline">
                   {profile.isAvailable !== false ? 'Disponible' : 'No disponible'}
+                </span>
+                <span className="sm:hidden">
+                  {profile.isAvailable !== false ? 'Disp.' : 'N/D'}
                 </span>
               </div>
             </div>
@@ -196,21 +200,25 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           
           {/* Creado por usuario */}
           {profile.createdByUser && (
-            <div className="flex items-center justify-between text-xs">
-              <div className="text-gray-400">
-                Creado por: <span className="text-blue-300">@{profile.createdByUser?.username || 'Usuario'}</span>
+            <div className="flex items-center justify-between text-xs gap-2">
+              <div className="text-gray-400 min-w-0 flex-1">
+                <span className="hidden sm:inline">Creado por: </span>
+                <span className="text-blue-300 truncate">@{profile.createdByUser?.username || 'Usuario'}</span>
               </div>
               {!profile.instagram && (
-                <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${
+                <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
                   profile.isAvailable !== false
                     ? 'bg-green-600/20 text-green-300 border border-green-600/30'
                     : 'bg-red-600/20 text-red-300 border border-red-600/30'
                 }`}>
-                  <span className="text-sm">
+                  <span className="text-xs">
                     {profile.isAvailable !== false ? '😏' : '😔'}
                   </span>
-                  <span>
+                  <span className="hidden sm:inline">
                     {profile.isAvailable !== false ? 'Disponible' : 'No disponible'}
+                  </span>
+                  <span className="sm:hidden">
+                    {profile.isAvailable !== false ? 'Disp.' : 'N/D'}
                   </span>
                 </div>
               )}
@@ -219,17 +227,20 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           
           {/* Si no hay Instagram ni usuario creador, mostrar solo disponibilidad */}
           {!profile.instagram && !profile.createdByUser && (
-            <div className="flex justify-end">
-              <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${
+            <div className="flex justify-center sm:justify-end">
+              <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                 profile.isAvailable !== false
                   ? 'bg-green-600/20 text-green-300 border border-green-600/30'
                   : 'bg-red-600/20 text-red-300 border border-red-600/30'
               }`}>
-                <span className="text-sm">
+                <span className="text-xs">
                   {profile.isAvailable !== false ? '😏' : '😔'}
                 </span>
-                <span>
+                <span className="hidden sm:inline">
                   {profile.isAvailable !== false ? 'Disponible' : 'No disponible'}
+                </span>
+                <span className="sm:hidden">
+                  {profile.isAvailable !== false ? 'Disp.' : 'N/D'}
                 </span>
               </div>
             </div>
