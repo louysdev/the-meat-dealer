@@ -52,7 +52,10 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
     if (currentUser.role === 'admin') return true;
     
     // Los usuarios solo pueden editar perfiles que ellos crearon
-    if (profile.createdByUser && profile.createdByUser.id === currentUser.id) return true;
+    if (profile.createdByUser?.id === currentUser.id) return true;
+    
+    // Para perfiles legacy sin createdByUser, permitir edición solo a admins
+    if (!profile.createdByUser && currentUser.role === 'admin') return true;
     
     return false;
   };

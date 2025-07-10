@@ -327,6 +327,8 @@ export const createProfile = async (
 // Actualizar perfil
 export const updateProfile = async (updatedProfile: Profile): Promise<Profile> => {
   try {
+    console.log('Iniciando actualización de perfil:', updatedProfile.id);
+    
     // Actualizar datos del perfil
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -340,11 +342,15 @@ export const updateProfile = async (updatedProfile: Profile): Promise<Profile> =
     }
 
     // Obtener media actual
-    const { data: currentMedia } = await supabase
+    const { data: currentMedia, error: currentMediaError } = await supabase
       .from('profile_photos')
       .select('*')
       .eq('profile_id', updatedProfile.id)
       .order('photo_order');
+
+    if (currentMediaError) {
+      console.error('Error obteniendo media actual:', currentMediaError);
+    }
 
     const currentMediaUrls = (currentMedia || []).map(m => 
       m.media_type === 'video' ? (m.video_url || m.photo_url) : m.photo_url
@@ -357,6 +363,19 @@ export const updateProfile = async (updatedProfile: Profile): Promise<Profile> =
       ...updatedProfile.videos.map(url => ({ url, type: 'video' as const }))
     ];
 
+    console.log('Media actual en BD:', currentMediaUrls);
+    console.log('Media nueva del formulario:', allMedia.map(m => m.url));
+
+    // Primero, eliminar todos los registros de media existentes
+    const { error: deleteAllMediaError } = await supabase
+      .from('profile_photos')
+      .delete()
+      .eq('profile_id', updatedProfile.id);
+
+    if (deleteAllMediaError) {
+      console.error('Error eliminando media existente:', deleteAllMediaError);
+    }
+
     // Procesar media
     for (let i = 0; i < allMedia.length; i++) {
       const mediaItem = allMedia[i];
@@ -366,24 +385,45 @@ export const updateProfile = async (updatedProfile: Profile): Promise<Profile> =
         const fileExt = mediaItem.type === 'photo' ? 'jpg' : 'mp4';
         const file = base64ToFile(mediaItem.url, `${mediaItem.type}-${i}.${fileExt}`);
         const fileUrl = await uploadFile(file, updatedProfile.id, i, mediaItem.type);
+        console.log('Archivo subido:', fileUrl);
         newMediaItems.push({
           url: fileUrl,
           type: mediaItem.type
         });
 
-        // Guardar referencia
-        await supabase
+        // Guardar nueva referencia
+        const { error: insertError } = await supabase
           .from('profile_photos')
-          .upsert([{
+          .insert([{
             profile_id: updatedProfile.id,
             photo_url: mediaItem.type === 'photo' ? fileUrl : '',
             video_url: mediaItem.type === 'video' ? fileUrl : null,
             media_type: mediaItem.type,
             photo_order: i
           }]);
+
+        if (insertError) {
+          console.error('Error insertando nueva referencia de media:', insertError);
+        }
       } else {
         // Es archivo existente, mantenerlo
+        console.log('Manteniendo archivo existente:', mediaItem.url);
         newMediaItems.push(mediaItem);
+
+        // Guardar referencia del archivo existente
+        const { error: insertError } = await supabase
+          .from('profile_photos')
+          .insert([{
+            profile_id: updatedProfile.id,
+            photo_url: mediaItem.type === 'photo' ? mediaItem.url : '',
+            video_url: mediaItem.type === 'video' ? mediaItem.url : null,
+            media_type: mediaItem.type,
+            photo_order: i
+          }]);
+
+        if (insertError) {
+          console.error('Error insertando referencia de archivo existente:', insertError);
+        }
       }
     }
 
@@ -392,20 +432,20 @@ export const updateProfile = async (updatedProfile: Profile): Promise<Profile> =
       !newMediaItems.some(item => item.url === url)
     );
     
+    console.log('Archivos a eliminar del storage:', mediaToDelete);
+    
     for (const mediaUrl of mediaToDelete) {
       const mediaRecord = currentMedia?.find(m => 
         (m.media_type === 'video' ? (m.video_url || m.photo_url) : m.photo_url) === mediaUrl
       );
       
       if (mediaRecord) {
+        console.log('Eliminando archivo del storage:', mediaUrl);
         await deleteFile(mediaUrl, mediaRecord.media_type || 'photo');
-        await supabase
-          .from('profile_photos')
-          .delete()
-          .eq('id', mediaRecord.id);
       }
     }
 
+    console.log('Actualización completada. Media final:', newMediaItems);
     return convertDatabaseProfileToProfile(profile as DatabaseProfile, newMediaItems);
   } catch (error) {
     console.error('Error en updateProfile:', error);
