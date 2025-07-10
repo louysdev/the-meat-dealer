@@ -258,7 +258,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
                       setFormData({ 
                         ...formData, 
                         role: newRole,
-                        canAccessPrivateVideos: newRole === 'admin' || formData.canAccessPrivateVideos
+                        canAccessPrivateVideos: newRole === 'admin' ? true : formData.canAccessPrivateVideos
                       });
                     }}
                     className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -269,21 +269,33 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onB
                 </div>
               </div>
               
-              {/* Checkbox para acceso a videos privados */}
-              <div className="mt-4">
-                <label className="flex items-center space-x-3 text-gray-300">
-                  <input
-                    type="checkbox"
-                    checked={formData.canAccessPrivateVideos || formData.role === 'admin'}
+              {/* Menú desplegable para acceso a videos privados */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Acceso a Videos Privados *
+                  </label>
+                  <select
+                    value={formData.canAccessPrivateVideos ? 'con_acceso' : 'sin_acceso'}
                     disabled={formData.role === 'admin'}
-                    onChange={(e) => setFormData({ ...formData, canAccessPrivateVideos: e.target.checked })}
-                    className="w-4 h-4 bg-gray-800 border border-gray-600 rounded focus:ring-2 focus:ring-red-500 focus:ring-offset-0 text-red-600 disabled:opacity-50"
-                  />
-                  <span className="text-sm">
-                    Acceso a Videos Privados
-                    {formData.role === 'admin' && <span className="text-gray-500 ml-1">(automático para admins)</span>}
-                  </span>
-                </label>
+                    onChange={(e) => {
+                      const hasAccess = e.target.value === 'con_acceso';
+                      setFormData({ 
+                        ...formData, 
+                        canAccessPrivateVideos: hasAccess 
+                      });
+                    }}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  >
+                    <option value="sin_acceso">Sin Acceso</option>
+                    <option value="con_acceso">Con Acceso</option>
+                  </select>
+                  {formData.role === 'admin' && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Los administradores siempre tienen acceso automático
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="flex space-x-3">
                 <button
