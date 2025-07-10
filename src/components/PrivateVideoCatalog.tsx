@@ -17,7 +17,7 @@ export const PrivateVideoCatalog: React.FC<PrivateVideoCatalogProps> = ({
   currentUserRole
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'recent' | 'videos' | 'duration'>('recent');
+  const [sortBy, setSortBy] = useState<'name' | 'recent' | 'videos'>('recent');
   const [filterBodySize, setFilterBodySize] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -39,8 +39,6 @@ export const PrivateVideoCatalog: React.FC<PrivateVideoCatalogProps> = ({
           return a.name.localeCompare(b.name);
         case 'videos':
           return b.videosCount - a.videosCount;
-        case 'duration':
-          return b.totalDurationMinutes - a.totalDurationMinutes;
         case 'recent':
         default:
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -49,7 +47,6 @@ export const PrivateVideoCatalog: React.FC<PrivateVideoCatalogProps> = ({
 
   const totalVideos = profiles.reduce((sum, p) => sum + p.videosCount, 0);
   const totalPhotos = profiles.reduce((sum, p) => sum + p.photosCount, 0);
-  const totalDuration = profiles.reduce((sum, p) => sum + p.totalDurationMinutes, 0);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -64,7 +61,7 @@ export const PrivateVideoCatalog: React.FC<PrivateVideoCatalogProps> = ({
         </p>
         
         {/* Estadísticas globales */}
-        <div className="flex justify-center space-x-6 mt-6 text-sm">
+        <div className="flex justify-center space-x-8 mt-6 text-sm">
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-400">{profiles.length}</div>
             <div className="text-gray-400">Perfiles</div>
@@ -76,10 +73,6 @@ export const PrivateVideoCatalog: React.FC<PrivateVideoCatalogProps> = ({
           <div className="text-center">
             <div className="text-2xl font-bold text-green-400">{totalPhotos}</div>
             <div className="text-gray-400">Fotos</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-yellow-400">{Math.floor(totalDuration / 60)}h {totalDuration % 60}m</div>
-            <div className="text-gray-400">Duración</div>
           </div>
         </div>
       </div>
@@ -149,7 +142,6 @@ export const PrivateVideoCatalog: React.FC<PrivateVideoCatalogProps> = ({
                   <option value="recent">Más recientes</option>
                   <option value="name">Por nombre</option>
                   <option value="videos">Más videos</option>
-                  <option value="duration">Mayor duración</option>
                 </select>
               </div>
 

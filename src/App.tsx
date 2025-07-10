@@ -14,12 +14,13 @@ import { CommentModeration } from './components/CommentModeration';
 import { PrivateVideoCatalog } from './components/PrivateVideoCatalog';
 import { PrivateVideoDetail } from './components/PrivateVideoDetail';
 import { CreatePrivateVideoProfileForm } from './components/CreatePrivateVideoProfileForm';
+import { EditPrivateVideoProfileForm } from './components/EditPrivateVideoProfileForm';
 import { Profile } from './types';
 import { useProfiles } from './hooks/useProfiles';
 import { usePrivateVideos } from './hooks/usePrivateVideos';
 import { useModal } from './hooks/useModal';
 import { useAuth } from './hooks/useAuth';
-import { createPrivateVideoProfile } from './services/privateVideoService';
+import { createPrivateVideoProfile, updatePrivateVideoProfile, deletePrivateVideoProfile } from './services/privateVideoService';
 
 // Declaraciones de tipo para las funciones de window
 declare global {
@@ -29,7 +30,7 @@ declare global {
   }
 }
 
-type View = 'catalog' | 'add' | 'detail' | 'edit' | 'shared-profile' | 'user-management' | 'comment-moderation' | 'private-videos' | 'private-video-detail' | 'create-private-profile';
+type View = 'catalog' | 'add' | 'detail' | 'edit' | 'shared-profile' | 'user-management' | 'comment-moderation' | 'private-videos' | 'private-video-detail' | 'create-private-profile' | 'edit-private-profile';
 
 function App() {
   const { currentUser, isAuthenticated, isLoading: authLoading, login, logout } = useAuth();
@@ -47,7 +48,8 @@ function App() {
   const {
     profiles: privateProfiles,
     loading: privateLoading,
-    error: privateError
+    error: privateError,
+    refreshProfiles: refreshPrivateProfiles
   } = usePrivateVideos(currentUser?.id);
 
   const { modal, hideModal, showSuccess, showError, showConfirm } = useModal();
@@ -234,6 +236,7 @@ function App() {
   const handleCreatePrivateProfileSubmit = async (profileData: any) => {
     try {
       await createPrivateVideoProfile(profileData, currentUser?.id || '');
+      await refreshPrivateProfiles(); // Refrescar la lista
       setCurrentView('private-videos');
       showSuccess(
         '¡Perfil Privado Creado!',
@@ -245,6 +248,62 @@ function App() {
         'No se pudo crear el perfil privado. Por favor intenta de nuevo.'
       );
     }
+  };
+
+  const handleEditPrivateProfile = (profile: any) => {
+    setSelectedPrivateProfile(profile);
+    setCurrentView('edit-private-profile');
+  };
+
+  const handleEditPrivateProfileSubmit = async (profileData: any) => {
+    try {
+      if (!selectedPrivateProfile || !currentUser) return;
+      
+      await updatePrivateVideoProfile(
+        selectedPrivateProfile.id,
+        profileData,
+        currentUser.id
+      );
+      
+      await refreshPrivateProfiles(); // Refrescar la lista
+      setCurrentView('private-videos');
+      showSuccess(
+        '¡Perfil Actualizado!',
+        'El perfil de videos privados se ha actualizado exitosamente.'
+      );
+    } catch (error) {
+      showError(
+        'Error al Actualizar',
+        'No se pudo actualizar el perfil privado. Por favor intenta de nuevo.'
+      );
+    }
+  };
+
+  const handleDeletePrivateProfile = (profile: any) => {
+    showConfirm(
+      'Eliminar Perfil Privado',
+      `¿Estás seguro de que quieres eliminar el perfil "${profile.name}"? Esta acción no se puede deshacer y eliminará todos los videos y fotos asociados.`,
+      async () => {
+        try {
+          if (!currentUser) return;
+          
+          await deletePrivateVideoProfile(profile.id, currentUser.id);
+          await refreshPrivateProfiles(); // Refrescar la lista
+          setCurrentView('private-videos');
+          showSuccess(
+            '¡Perfil Eliminado!',
+            'El perfil de videos privados se ha eliminado exitosamente.'
+          );
+        } catch (error) {
+          showError(
+            'Error al Eliminar',
+            'No se pudo eliminar el perfil privado. Por favor intenta de nuevo.'
+          );
+        }
+      },
+      'Eliminar',
+      'Cancelar'
+    );
   };
 
   const handleLogout = () => {
@@ -290,7 +349,6 @@ function App() {
           onUserManagement={handleUserManagement}
           onCommentModeration={handleCommentModeration}
           onPrivateVideos={handlePrivateVideos}
-          onCommentModeration={handleCommentModeration}
           onLogout={handleLogout}
         />
 
@@ -363,6 +421,8 @@ function App() {
               profile={selectedPrivateProfile}
               currentUser={currentUser}
               onBack={() => setCurrentView('private-videos')}
+              onEdit={handleEditPrivateProfile}
+              onDelete={handleDeletePrivateProfile}
             />
           )}
 
@@ -370,23 +430,32 @@ function App() {
             <CreatePrivateVideoProfileForm 
               onSubmit={handleCreatePrivateProfileSubmit}
               onCancel={() => setCurrentView('private-videos')}
-              currentUserId={currentUser.id}
-            />
-          )}
-        </main>
-          {currentView === 'user-management' && currentUser && (
-            <UserManagement 
-              currentUser={currentUser}
-              onBack={handleBackToCatalog}
             />
           )}
 
-          {currentView === 'comment-moderation' && currentUser && (
-            <CommentModeration 
+          {currentView === 'edit-private-profile' && selectedPrivateProfile && (
+            <EditPrivateVideoProfileForm 
+              profile={selectedPrivateProfile}
               currentUser={currentUser}
-              onBack={handleBackToCatalog}
+              onSubmit={handleEditPrivateProfileSubmit}
+              onCancel={() => setCurrentView('private-video-detail')}
             />
           )}
+        </main>
+
+        {currentView === 'user-management' && currentUser && (
+          <UserManagement 
+            currentUser={currentUser}
+            onBack={handleBackToCatalog}
+          />
+        )}
+
+        {currentView === 'comment-moderation' && currentUser && (
+          <CommentModeration 
+            currentUser={currentUser}
+            onBack={handleBackToCatalog}
+          />
+        )}
       </div>
 
       {/* Modal Global */}

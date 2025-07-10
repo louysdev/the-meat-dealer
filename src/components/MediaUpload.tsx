@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Upload, X, Camera, Video, Play } from 'lucide-react';
+import { X, Camera, Video, Play } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
 
 interface MediaItem {
@@ -30,6 +30,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
 
     const newMedia: MediaItem[] = [];
     
+    // Procesar archivos de forma secuencial para evitar problemas de concurrencia
     for (const file of files) {
       if (file.type.startsWith('image/')) {
         try {
@@ -42,27 +43,27 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
           console.error('Error resizing image:', error);
         }
       } else if (file.type.startsWith('video/')) {
-        // Para videos, convertimos a base64 directamente
-        const reader = new FileReader();
-        reader.onload = () => {
-          newMedia.push({
-            url: reader.result as string,
-            type: 'video'
+        // Para videos, convertimos a base64 usando Promise
+        try {
+          const base64Video = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
           });
           
-          // Actualizar solo cuando se complete la lectura del último archivo
-          if (newMedia.length === files.filter(f => f.type.startsWith('video/') || f.type.startsWith('image/')).length) {
-            onMediaChange([...media, ...newMedia]);
-          }
-        };
-        reader.readAsDataURL(file);
+          newMedia.push({
+            url: base64Video,
+            type: 'video'
+          });
+        } catch (error) {
+          console.error('Error processing video:', error);
+        }
       }
     }
     
-    // Si no hay videos, actualizar inmediatamente
-    if (!files.some(f => f.type.startsWith('video/'))) {
-      onMediaChange([...media, ...newMedia]);
-    }
+    // Actualizar media después de procesar todos los archivos
+    onMediaChange([...media, ...newMedia]);
     
     if (fileInputRef.current) {
       fileInputRef.current.value = '';

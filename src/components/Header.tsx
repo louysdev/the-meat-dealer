@@ -23,7 +23,11 @@ interface HeaderProps {
     | "edit"
     | "shared-profile"
     | "user-management"
-    | "comment-moderation";
+    | "comment-moderation"
+    | "private-videos"
+    | "private-video-detail"
+    | "create-private-profile"
+    | "edit-private-profile";
   onViewChange: (view: "catalog" | "add") => void;
   onLogout?: () => void;
   currentUser?: User | null;

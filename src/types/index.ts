@@ -102,7 +102,9 @@ export interface PrivateVideoProfile {
   id: string;
   name: string;
   description: string;
+  height: 'Pequeña' | 'Mediana' | 'Alta';
   bodySize: 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL';
+  bustSize: 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL';
   mainProfileId?: string; // Relación con perfil del catálogo principal
   mainProfile?: {
     id: string;
@@ -115,7 +117,6 @@ export interface PrivateVideoProfile {
   createdBy?: User;
   videosCount: number;
   photosCount: number;
-  totalDurationMinutes: number;
   hasAccess: boolean;
   canUpload: boolean;
 }
@@ -178,7 +179,9 @@ export interface PrivateVideoComment {
 export interface CreatePrivateVideoProfileData {
   name: string;
   description: string;
+  height: 'Pequeña' | 'Mediana' | 'Alta';
   bodySize: 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL';
+  bustSize: 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL';
   mainProfileId?: string;
   media?: MediaItem[];
 }

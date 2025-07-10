@@ -8,21 +8,23 @@ import {
   PrivateVideoComment,
   CreatePrivateVideoProfileData,
   CreatePrivateVideoCommentData,
-  User,
-  MediaItem
+  CreatePrivateVideoData,
+  CreatePrivatePhotoData
 } from '../types';
 
 // Convertir perfil de video privado de la base de datos
 const convertDatabasePrivateVideoProfile = (
   dbProfile: any,
-  stats: { videos_count: number; photos_count: number; total_duration_minutes: number },
+  stats: { videos_count: number; photos_count: number },
   hasAccess: boolean = false,
   canUpload: boolean = false
 ): PrivateVideoProfile => ({
   id: dbProfile.id,
   name: dbProfile.name,
   description: dbProfile.description,
+  height: dbProfile.height,
   bodySize: dbProfile.body_size,
+  bustSize: dbProfile.bust_size,
   mainProfileId: dbProfile.main_profile_id,
   mainProfile: dbProfile.main_profile ? {
     id: dbProfile.main_profile.id,
@@ -43,7 +45,6 @@ const convertDatabasePrivateVideoProfile = (
   } : undefined,
   videosCount: stats.videos_count,
   photosCount: stats.photos_count,
-  totalDurationMinutes: stats.total_duration_minutes,
   hasAccess,
   canUpload
 });
@@ -130,7 +131,7 @@ export const getPrivateVideoProfiles = async (currentUserId?: string): Promise<P
         const { data: stats } = await supabase
           .rpc('get_private_video_stats', { profile_uuid: profile.id });
 
-        const profileStats = stats?.[0] || { videos_count: 0, photos_count: 0, total_duration_minutes: 0 };
+        const profileStats = stats?.[0] || { videos_count: 0, photos_count: 0 };
 
         return convertDatabasePrivateVideoProfile(
           profile,
@@ -150,7 +151,7 @@ export const getPrivateVideoProfiles = async (currentUserId?: string): Promise<P
 
 // Crear nuevo perfil de video privado (solo admins)
 export const createPrivateVideoProfile = async (
-  profileData: CreatePrivateVideoProfileData & { media: MediaItem[] },
+  profileData: CreatePrivateVideoProfileData,
   createdBy: string
 ): Promise<PrivateVideoProfile> => {
   try {
@@ -159,7 +160,9 @@ export const createPrivateVideoProfile = async (
       .insert([{
         name: profileData.name,
         description: profileData.description,
+        height: profileData.height,
         body_size: profileData.bodySize,
+        bust_size: profileData.bustSize,
         main_profile_id: profileData.mainProfileId,
         created_by: createdBy
       }])
@@ -194,7 +197,17 @@ export const createPrivateVideoProfile = async (
       }
     }
 
-    const stats = { videos_count: 0, photos_count: 0, total_duration_minutes: 0 };
+    // Obtener estadísticas actualizadas después de subir archivos
+    const { data: stats, error: statsError } = await supabase
+      .rpc('get_private_video_stats', { profile_uuid: profile.id });
+
+    if (statsError) {
+      console.error('Error obteniendo estadísticas:', statsError);
+      // Usar estadísticas por defecto si hay error
+      const defaultStats = { videos_count: 0, photos_count: 0 };
+      return convertDatabasePrivateVideoProfile(profile, defaultStats, true, true);
+    }
+
     return convertDatabasePrivateVideoProfile(profile, stats, true, true);
   } catch (error) {
     console.error('Error en createPrivateVideoProfile:', error);
@@ -208,18 +221,32 @@ export const getPrivateProfileMedia = async (
   currentUserId?: string
 ): Promise<{ videos: PrivateVideo[]; photos: PrivatePhoto[] }> => {
   try {
+    
     if (!currentUserId) {
       throw new Error('Usuario no autenticado');
     }
 
-    // Verificar acceso
-    const hasAccess = await supabase.rpc('user_has_private_access', {
-      user_uuid: currentUserId,
-      profile_uuid: profileId
-    });
+    // Verificar si es admin o verificar acceso
+    const { data: user } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', currentUserId)
+      .single();
 
-    if (!hasAccess.data) {
-      throw new Error('No tienes acceso a este contenido privado');
+    const isAdmin = user?.role === 'admin';
+
+    // Solo verificar acceso específico si no es admin
+    if (!isAdmin) {
+      const hasAccess = await supabase.rpc('user_has_private_access', {
+        user_uuid: currentUserId,
+        profile_uuid: profileId
+      });
+
+      if (!hasAccess.data) {
+        throw new Error('No tienes acceso a este contenido privado');
+      }
+    } else {
+      console.log('Usuario admin detectado, omitiendo verificación de acceso');
     }
 
     // Obtener videos
@@ -266,42 +293,101 @@ export const getPrivateProfileMedia = async (
       throw new Error(`Error obteniendo fotos: ${photosError.message}`);
     }
 
-    const convertedVideos: PrivateVideo[] = (videos || []).map(video => ({
-      id: video.id,
-      profileId: video.profile_id,
-      title: video.title,
-      videoUrl: video.video_url,
-      thumbnailUrl: video.thumbnail_url,
-      durationSeconds: video.duration_seconds,
-      fileSizeMb: video.file_size_mb,
-      videoOrder: video.video_order,
-      createdAt: new Date(video.created_at),
-      uploadedBy: video.uploaded_by_user ? {
-        id: video.uploaded_by_user.id,
-        fullName: video.uploaded_by_user.full_name,
-        username: video.uploaded_by_user.username,
-        role: video.uploaded_by_user.role,
-        isActive: video.uploaded_by_user.is_active,
-        createdAt: new Date(video.uploaded_by_user.created_at),
-        updatedAt: new Date(video.uploaded_by_user.updated_at)
-      } : undefined
+    const convertedVideos: PrivateVideo[] = await Promise.all((videos || []).map(async video => {
+      // Generar URL firmada para el video (bucket privado)
+      let signedVideoUrl = video.video_url;
+      
+      if (video.video_url && video.video_url.includes('/object/public/')) {
+        // Extraer la ruta del archivo desde la URL pública
+        const urlParts = video.video_url.split('/object/public/private-videos/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          
+          const { data, error } = await supabase.storage
+            .from('private-videos')
+            .createSignedUrl(filePath, 3600); // URL válida por 1 hora
+          
+          if (!error && data) {
+            signedVideoUrl = data.signedUrl;
+          }
+        }
+      }
+
+      // Generar URL firmada para el thumbnail si existe
+      let signedThumbnailUrl = video.thumbnail_url;
+      if (video.thumbnail_url && video.thumbnail_url.includes('/object/public/')) {
+        const urlParts = video.thumbnail_url.split('/object/public/private-videos/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          
+          const { data, error } = await supabase.storage
+            .from('private-videos')
+            .createSignedUrl(filePath, 3600);
+          
+          if (!error && data) {
+            signedThumbnailUrl = data.signedUrl;
+          }
+        }
+      }
+
+      return {
+        id: video.id,
+        profileId: video.profile_id,
+        title: video.title,
+        videoUrl: signedVideoUrl,
+        thumbnailUrl: signedThumbnailUrl,
+        durationSeconds: video.duration_seconds,
+        fileSizeMb: video.file_size_mb,
+        videoOrder: video.video_order,
+        createdAt: new Date(video.created_at),
+        uploadedBy: video.uploaded_by_user ? {
+          id: video.uploaded_by_user.id,
+          fullName: video.uploaded_by_user.full_name,
+          username: video.uploaded_by_user.username,
+          role: video.uploaded_by_user.role,
+          isActive: video.uploaded_by_user.is_active,
+          createdAt: new Date(video.uploaded_by_user.created_at),
+          updatedAt: new Date(video.uploaded_by_user.updated_at)
+        } : undefined
+      };
     }));
 
-    const convertedPhotos: PrivatePhoto[] = (photos || []).map(photo => ({
-      id: photo.id,
-      profileId: photo.profile_id,
-      photoUrl: photo.photo_url,
-      photoOrder: photo.photo_order,
-      createdAt: new Date(photo.created_at),
-      uploadedBy: photo.uploaded_by_user ? {
-        id: photo.uploaded_by_user.id,
-        fullName: photo.uploaded_by_user.full_name,
-        username: photo.uploaded_by_user.username,
-        role: photo.uploaded_by_user.role,
-        isActive: photo.uploaded_by_user.is_active,
-        createdAt: new Date(photo.uploaded_by_user.created_at),
-        updatedAt: new Date(photo.uploaded_by_user.updated_at)
-      } : undefined
+    const convertedPhotos: PrivatePhoto[] = await Promise.all((photos || []).map(async photo => {
+      // Generar URL firmada para la foto (bucket privado)
+      let signedPhotoUrl = photo.photo_url;
+      
+      if (photo.photo_url && photo.photo_url.includes('/object/public/')) {
+        // Extraer la ruta del archivo desde la URL pública
+        const urlParts = photo.photo_url.split('/object/public/private-photos/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          
+          const { data, error } = await supabase.storage
+            .from('private-photos')
+            .createSignedUrl(filePath, 3600); // URL válida por 1 hora
+          
+          if (!error && data) {
+            signedPhotoUrl = data.signedUrl;
+          }
+        }
+      }
+
+      return {
+        id: photo.id,
+        profileId: photo.profile_id,
+        photoUrl: signedPhotoUrl,
+        photoOrder: photo.photo_order,
+        createdAt: new Date(photo.created_at),
+        uploadedBy: photo.uploaded_by_user ? {
+          id: photo.uploaded_by_user.id,
+          fullName: photo.uploaded_by_user.full_name,
+          username: photo.uploaded_by_user.username,
+          role: photo.uploaded_by_user.role,
+          isActive: photo.uploaded_by_user.is_active,
+          createdAt: new Date(photo.uploaded_by_user.created_at),
+          updatedAt: new Date(photo.uploaded_by_user.updated_at)
+        } : undefined
+      };
     }));
 
     return { videos: convertedVideos, photos: convertedPhotos };
@@ -582,7 +668,7 @@ export const createPrivateVideoComment = async (
 };
 
 // Subir video privado
-const uploadPrivateVideo = async (
+export const uploadPrivateVideo = async (
   videoData: CreatePrivateVideoData,
   uploadedBy: string
 ): Promise<PrivateVideo> => {
@@ -591,7 +677,7 @@ const uploadPrivateVideo = async (
     const videoExt = videoData.videoFile.name.split('.').pop();
     const videoFileName = `${videoData.profileId}/${Date.now()}.${videoExt}`;
     
-    const { data: videoUpload, error: videoError } = await supabase.storage
+    const { error: videoError } = await supabase.storage
       .from('private-videos')
       .upload(videoFileName, videoData.videoFile);
 
@@ -609,7 +695,7 @@ const uploadPrivateVideo = async (
       const thumbExt = videoData.thumbnailFile.name.split('.').pop();
       const thumbFileName = `${videoData.profileId}/thumb_${Date.now()}.${thumbExt}`;
       
-      const { data: thumbUpload, error: thumbError } = await supabase.storage
+      const { error: thumbError } = await supabase.storage
         .from('private-photos')
         .upload(thumbFileName, videoData.thumbnailFile);
 
@@ -668,7 +754,7 @@ const uploadPrivateVideo = async (
 };
 
 // Subir foto privada
-const uploadPrivatePhoto = async (
+export const uploadPrivatePhoto = async (
   photoData: CreatePrivatePhotoData,
   uploadedBy: string
 ): Promise<PrivatePhoto> => {
@@ -677,7 +763,7 @@ const uploadPrivatePhoto = async (
     const photoExt = photoData.photoFile.name.split('.').pop();
     const photoFileName = `${photoData.profileId}/${Date.now()}.${photoExt}`;
     
-    const { data: photoUpload, error: photoError } = await supabase.storage
+    const { error: photoError } = await supabase.storage
       .from('private-photos')
       .upload(photoFileName, photoData.photoFile);
 
@@ -749,6 +835,278 @@ export const getMainProfiles = async (): Promise<{ id: string; name: string; age
     }));
   } catch (error) {
     console.error('Error en getMainProfiles:', error);
+    throw error;
+  }
+};
+
+// Actualizar perfil de video privado (solo admins o creadores)
+export const updatePrivateVideoProfile = async (
+  profileId: string,
+  profileData: Partial<CreatePrivateVideoProfileData>,
+  currentUserId: string
+): Promise<PrivateVideoProfile> => {
+  try {
+    // Verificar permisos
+    const { data: user } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', currentUserId)
+      .single();
+
+    const { data: profile } = await supabase
+      .from('private_video_profiles')
+      .select('created_by')
+      .eq('id', profileId)
+      .single();
+
+    const isAdmin = user?.role === 'admin';
+    const isCreator = profile?.created_by === currentUserId;
+
+    if (!isAdmin && !isCreator) {
+      throw new Error('No tienes permisos para editar este perfil');
+    }
+
+    // Actualizar perfil
+    const { data: updatedProfile, error } = await supabase
+      .from('private_video_profiles')
+      .update({
+        name: profileData.name,
+        description: profileData.description,
+        height: profileData.height,
+        body_size: profileData.bodySize,
+        bust_size: profileData.bustSize,
+        main_profile_id: profileData.mainProfileId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', profileId)
+      .select(`
+        *,
+        main_profile:main_profile_id(
+          id,
+          first_name,
+          last_name,
+          age,
+          residence
+        ),
+        created_by_user:created_by(
+          id,
+          full_name,
+          username,
+          role,
+          is_active,
+          created_at,
+          updated_at
+        )
+      `)
+      .single();
+
+    if (error) {
+      throw new Error(`Error actualizando perfil: ${error.message}`);
+    }
+
+    // Obtener estadísticas
+    const { data: stats } = await supabase
+      .rpc('get_private_video_stats', { profile_uuid: profileId });
+
+    const profileStats = stats?.[0] || { videos_count: 0, photos_count: 0 };
+
+    return convertDatabasePrivateVideoProfile(
+      updatedProfile,
+      profileStats,
+      true,
+      isAdmin || isCreator
+    );
+  } catch (error) {
+    console.error('Error en updatePrivateVideoProfile:', error);
+    throw error;
+  }
+};
+
+// Eliminar perfil de video privado (solo admins o creadores)
+export const deletePrivateVideoProfile = async (
+  profileId: string,
+  currentUserId: string
+): Promise<void> => {
+  try {
+    // Verificar permisos
+    const { data: user } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', currentUserId)
+      .single();
+
+    const { data: profile } = await supabase
+      .from('private_video_profiles')
+      .select('created_by')
+      .eq('id', profileId)
+      .single();
+
+    const isAdmin = user?.role === 'admin';
+    const isCreator = profile?.created_by === currentUserId;
+
+    if (!isAdmin && !isCreator) {
+      throw new Error('No tienes permisos para eliminar este perfil');
+    }
+
+    // Obtener archivos para eliminar del storage
+    const { data: videos } = await supabase
+      .from('private_videos')
+      .select('video_url, thumbnail_url')
+      .eq('profile_id', profileId);
+
+    const { data: photos } = await supabase
+      .from('private_photos')
+      .select('photo_url')
+      .eq('profile_id', profileId);
+
+    // Eliminar archivos del storage
+    const filesToDelete: string[] = [];
+
+    (videos || []).forEach(video => {
+      if (video.video_url?.includes('/object/public/')) {
+        const urlParts = video.video_url.split('/object/public/private-videos/');
+        if (urlParts.length > 1) {
+          filesToDelete.push(urlParts[1]);
+        }
+      }
+      if (video.thumbnail_url?.includes('/object/public/')) {
+        const urlParts = video.thumbnail_url.split('/object/public/private-videos/');
+        if (urlParts.length > 1) {
+          filesToDelete.push(urlParts[1]);
+        }
+      }
+    });
+
+    (photos || []).forEach(photo => {
+      if (photo.photo_url?.includes('/object/public/')) {
+        const urlParts = photo.photo_url.split('/object/public/private-photos/');
+        if (urlParts.length > 1) {
+          filesToDelete.push(urlParts[1]);
+        }
+      }
+    });
+
+    // Eliminar archivos de videos del storage
+    if (filesToDelete.length > 0) {
+      const videoFiles = filesToDelete.filter(file => !file.includes('.jpg') && !file.includes('.jpeg') && !file.includes('.png'));
+      const photoFiles = filesToDelete.filter(file => file.includes('.jpg') || file.includes('.jpeg') || file.includes('.png'));
+
+      if (videoFiles.length > 0) {
+        await supabase.storage
+          .from('private-videos')
+          .remove(videoFiles);
+      }
+
+      if (photoFiles.length > 0) {
+        await supabase.storage
+          .from('private-photos')
+          .remove(photoFiles);
+      }
+    }
+
+    // Eliminar registros de la base de datos (las foreign keys se encargan del cascade)
+    const { error } = await supabase
+      .from('private_video_profiles')
+      .delete()
+      .eq('id', profileId);
+
+    if (error) {
+      throw new Error(`Error eliminando perfil: ${error.message}`);
+    }
+  } catch (error) {
+    console.error('Error en deletePrivateVideoProfile:', error);
+    throw error;
+  }
+};
+
+// Eliminar foto privada
+export const deletePrivatePhoto = async (photoId: string): Promise<void> => {
+  try {
+    // Obtener información de la foto antes de eliminarla
+    const { data: photo, error: getError } = await supabase
+      .from('private_photos')
+      .select('photo_url')
+      .eq('id', photoId)
+      .single();
+
+    if (getError) {
+      throw new Error(`Error obteniendo foto: ${getError.message}`);
+    }
+
+    // Extraer el nombre del archivo de la URL
+    const fileName = photo.photo_url.split('/').pop();
+    if (fileName) {
+      // Eliminar archivo del storage
+      const { error: storageError } = await supabase.storage
+        .from('private-photos')
+        .remove([fileName]);
+
+      if (storageError) {
+        console.warn('Error eliminando archivo del storage:', storageError.message);
+        // Continuar con la eliminación del registro aunque falle el storage
+      }
+    }
+
+    // Eliminar registro de la base de datos
+    const { error: dbError } = await supabase
+      .from('private_photos')
+      .delete()
+      .eq('id', photoId);
+
+    if (dbError) {
+      throw new Error(`Error eliminando foto de la base de datos: ${dbError.message}`);
+    }
+  } catch (error) {
+    console.error('Error en deletePrivatePhoto:', error);
+    throw error;
+  }
+};
+
+// Eliminar video privado
+export const deletePrivateVideo = async (videoId: string): Promise<void> => {
+  try {
+    // Obtener información del video antes de eliminarlo
+    const { data: video, error: getError } = await supabase
+      .from('private_videos')
+      .select('video_url, thumbnail_url')
+      .eq('id', videoId)
+      .single();
+
+    if (getError) {
+      throw new Error(`Error obteniendo video: ${getError.message}`);
+    }
+
+    // Extraer nombres de archivos de las URLs
+    const videoFileName = video.video_url.split('/').pop();
+    const thumbnailFileName = video.thumbnail_url?.split('/').pop();
+    
+    const filesToDelete = [];
+    if (videoFileName) filesToDelete.push(videoFileName);
+    if (thumbnailFileName) filesToDelete.push(thumbnailFileName);
+
+    if (filesToDelete.length > 0) {
+      // Eliminar archivos del storage
+      const { error: storageError } = await supabase.storage
+        .from('private-videos')
+        .remove(filesToDelete);
+
+      if (storageError) {
+        console.warn('Error eliminando archivos del storage:', storageError.message);
+        // Continuar con la eliminación del registro aunque falle el storage
+      }
+    }
+
+    // Eliminar registro de la base de datos
+    const { error: dbError } = await supabase
+      .from('private_videos')
+      .delete()
+      .eq('id', videoId);
+
+    if (dbError) {
+      throw new Error(`Error eliminando video de la base de datos: ${dbError.message}`);
+    }
+  } catch (error) {
+    console.error('Error en deletePrivateVideo:', error);
     throw error;
   }
 };

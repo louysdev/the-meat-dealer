@@ -5,9 +5,8 @@ import { getMainProfiles } from '../services/privateVideoService';
 import { MediaUpload } from './MediaUpload';
 
 interface CreatePrivateVideoProfileFormProps {
-  onSubmit: (profileData: CreatePrivateVideoProfileData & { media: MediaItem[] }) => Promise<void>;
+  onSubmit: (profileData: CreatePrivateVideoProfileData) => Promise<void>;
   onCancel: () => void;
-  currentUserId: string;
 }
 
 interface MainProfile {
@@ -17,20 +16,21 @@ interface MainProfile {
   residence?: string;
 }
 
-interface MediaItem {
+interface SimpleMediaItem {
   url: string;
   type: 'photo' | 'video';
 }
 
 export const CreatePrivateVideoProfileForm: React.FC<CreatePrivateVideoProfileFormProps> = ({
   onSubmit,
-  onCancel,
-  currentUserId
+  onCancel
 }) => {
   const [formData, setFormData] = useState<CreatePrivateVideoProfileData>({
     name: '',
     description: '',
+    height: 'Mediana',
     bodySize: 'M',
+    bustSize: 'M',
     mainProfileId: undefined
   });
 
@@ -38,7 +38,7 @@ export const CreatePrivateVideoProfileForm: React.FC<CreatePrivateVideoProfileFo
   const [loading, setLoading] = useState(false);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
-  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [media, setMedia] = useState<SimpleMediaItem[]>([]);
 
   useEffect(() => {
     loadMainProfiles();
@@ -56,7 +56,7 @@ export const CreatePrivateVideoProfileForm: React.FC<CreatePrivateVideoProfileFo
     } else if (formData.mainProfileId === 'anonymous') {
       setFormData(prev => ({
         ...prev,
-        name: 'Contenido Privado Anónimo',
+        name: 'Anónimo',
         description: 'Videos y fotos exclusivos de perfil anónimo'
       }));
     }
@@ -106,11 +106,19 @@ export const CreatePrivateVideoProfileForm: React.FC<CreatePrivateVideoProfileFo
     setLoading(true);
 
     try {
-      // Preparar datos para envío
+      // Convertir SimpleMediaItem a MediaItem
+      const mediaItems = media.map((item, index) => ({
+        id: `temp-${index}`, // ID temporal para la creación
+        url: item.url,
+        type: item.type,
+        order: index
+      }));
+
+      // Preparar datos para envío incluyendo los archivos de media
       const profileDataToSubmit = {
         ...formData,
         mainProfileId: formData.mainProfileId === 'anonymous' ? undefined : formData.mainProfileId,
-        media
+        media: mediaItems
       };
 
       await onSubmit(profileDataToSubmit);
@@ -252,11 +260,44 @@ export const CreatePrivateVideoProfileForm: React.FC<CreatePrivateVideoProfileFo
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Altura
+                </label>
+                <select
+                  value={formData.height}
+                  onChange={(e) => setFormData({ ...formData, height: e.target.value as any })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="Pequeña">Pequeña</option>
+                  <option value="Mediana">Mediana</option>
+                  <option value="Alta">Alta</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Tamaño del Cuerpo
                 </label>
                 <select
                   value={formData.bodySize}
                   onChange={(e) => setFormData({ ...formData, bodySize: e.target.value as any })}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="S">S</option>
+                  <option value="M">M</option>
+                  <option value="L">L</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                  <option value="XXXL">XXXL</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Tamaño del Busto
+                </label>
+                <select
+                  value={formData.bustSize}
+                  onChange={(e) => setFormData({ ...formData, bustSize: e.target.value as any })}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="S">S</option>
