@@ -253,22 +253,6 @@ export const PrivateMediaUpload: React.FC<PrivateMediaUploadProps> = ({
             </div>
           </div>
         ))}
-
-        {/* Add more button in grid */}
-        {totalMedia < maxItems && (
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="aspect-[2/3] border-2 border-dashed border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-500 hover:bg-purple-500/5 transition-colors"
-          >
-            <div className="flex space-x-2 mb-2">
-              <Camera className="w-6 h-6 text-gray-400" />
-              <Video className="w-6 h-6 text-gray-400" />
-            </div>
-            <span className="text-sm text-gray-400 text-center px-4">
-              {uploading ? 'Subiendo...' : 'Agregar más'}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Help text */}
