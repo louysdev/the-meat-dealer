@@ -10,8 +10,10 @@ export const useComments = (profileId: string, currentUserId?: string) => {
   // Cargar comentarios
   const loadComments = async () => {
     try {
-      setLoading(true);
       setError(null);
+      if (comments.length === 0) {
+        setLoading(true);
+      }
       const data = await commentService.getProfileComments(profileId, currentUserId);
       setComments(data);
     } catch (err) {
@@ -178,6 +180,7 @@ export const useComments = (profileId: string, currentUserId?: string) => {
 
   useEffect(() => {
     if (profileId) {
+      console.log('useComments: Cargando comentarios para perfil:', profileId);
       loadComments();
     }
   }, [profileId, currentUserId]);

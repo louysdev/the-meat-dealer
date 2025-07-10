@@ -38,7 +38,7 @@ const convertDatabaseCommentToComment = (
 // Obtener comentarios de un perfil
 export const getProfileComments = async (profileId: string, currentUserId?: string): Promise<Comment[]> => {
   try {
-    console.log('Obteniendo comentarios para perfil:', profileId);
+    console.log('Obteniendo comentarios para perfil:', profileId, 'Usuario actual:', currentUserId);
 
     // Obtener comentarios principales (sin parent_comment_id)
     const { data: comments, error: commentsError } = await supabase
@@ -58,7 +58,6 @@ export const getProfileComments = async (profileId: string, currentUserId?: stri
       .eq('profile_id', profileId)
       .is('parent_comment_id', null)
       .eq('is_deleted', false)
-      .eq('is_hidden', false)
       .order('created_at', { ascending: true });
 
     if (commentsError) {
@@ -70,8 +69,18 @@ export const getProfileComments = async (profileId: string, currentUserId?: stri
     }
 
     // Obtener estadísticas y estado de likes para cada comentario
+    const visibleComments = comments.filter(comment => {
+      // Los administradores pueden ver todos los comentarios
+      if (currentUserId) {
+        // Verificar si el usuario actual es admin (esto debería venir del contexto)
+        // Por ahora, mostrar comentarios no ocultos para usuarios normales
+        return !comment.is_hidden;
+      }
+      return !comment.is_hidden;
+    });
+
     const commentsWithStats = await Promise.all(
-      comments.map(async (comment) => {
+      visibleComments.map(async (comment) => {
         // Obtener estadísticas
         const { data: stats } = await supabase
           .rpc('get_comment_stats', { comment_uuid: comment.id });
@@ -130,7 +139,6 @@ export const getCommentReplies = async (commentId: string, currentUserId?: strin
       `)
       .eq('parent_comment_id', commentId)
       .eq('is_deleted', false)
-      .eq('is_hidden', false)
       .order('created_at', { ascending: true });
 
     if (repliesError) {
@@ -141,9 +149,12 @@ export const getCommentReplies = async (commentId: string, currentUserId?: strin
       return [];
     }
 
+    // Filtrar respuestas visibles
+    const visibleReplies = replies.filter(reply => !reply.is_hidden);
+
     // Obtener estadísticas para cada respuesta
     const repliesWithStats = await Promise.all(
-      replies.map(async (reply) => {
+      visibleReplies.map(async (reply) => {
         const { data: stats } = await supabase
           .rpc('get_comment_stats', { comment_uuid: reply.id });
 

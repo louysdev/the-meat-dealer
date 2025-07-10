@@ -302,12 +302,14 @@ function App() {
           {currentView === 'user-management' && currentUser && (
             <UserManagement 
               currentUser={currentUser}
+              onBack={handleBackToCatalog}
             />
           )}
 
           {currentView === 'comment-moderation' && currentUser && (
             <CommentModeration 
               currentUser={currentUser}
+              onBack={handleBackToCatalog}
             />
           )}
       </div>

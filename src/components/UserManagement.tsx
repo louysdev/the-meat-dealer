@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Trash2, UserCheck, UserX, Eye, EyeOff, UserRoundPlus } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, UserCheck, UserX, Eye, EyeOff, UserRoundPlus, ArrowLeft } from 'lucide-react';
 import { User, CreateUserData } from '../types';
 import { getUsers, createUser, updateUser, toggleUserStatus, deleteUser } from '../services/userService';
 import { Modal } from './Modal';
@@ -7,9 +7,10 @@ import { LoadingSpinner } from './LoadingSpinner';
 
 interface UserManagementProps {
   currentUser: User;
+  onBack?: () => void;
 }
 
-export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
+export const UserManagement: React.FC<UserManagementProps> = ({ currentUser, onBack }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -149,6 +150,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="text-gray-400 hover:text-white transition-colors mr-2"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
             <Users className="w-6 h-6 text-blue-400" />
             <h2 className="text-2xl font-bold text-white">Gestión de Usuarios</h2>
           </div>

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Eye, EyeOff, Flag, User, Calendar, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { MessageCircle, Eye, EyeOff, Flag, User, Calendar, ThumbsUp, ThumbsDown, ArrowLeft } from 'lucide-react';
 import { Comment, User as UserType } from '../types';
 import { getCommentsForModeration, moderateComment } from '../services/commentService';
 import { getTimeAgo } from '../utils/dateUtils';
 
 interface CommentModerationProps {
   currentUser: UserType;
+  onBack?: () => void;
 }
 
-export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUser }) => {
+export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUser, onBack }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +74,14 @@ export const CommentModeration: React.FC<CommentModerationProps> = ({ currentUse
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="text-gray-400 hover:text-white transition-colors mr-2"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
             <Flag className="w-6 h-6 text-yellow-400" />
             <h2 className="text-2xl font-bold text-white">Moderación de Comentarios</h2>
           </div>
